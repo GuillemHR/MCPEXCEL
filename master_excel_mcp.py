@@ -1017,8 +1017,30 @@ def update_cell(ws: Any, cell: str, value_or_formula: Any) -> None:
     
     try:
         # Asignar valor a la celda
-        ws[cell] = value_or_formula
-    
+        cell_obj = ws[cell]
+        cell_obj.value = value_or_formula
+
+        # ----------------------------------------------
+        # Ajuste automático si se escribe texto largo
+        # ----------------------------------------------
+        if isinstance(value_or_formula, str):
+            text = value_or_formula
+            if len(text) > 40 or "\n" in text:
+                cell_obj.alignment = Alignment(wrap_text=True)
+                column_letter = cell_obj.column_letter
+                # Calcular ancho proporcional al texto más largo
+                max_len = max(len(line) for line in text.splitlines())
+                ws.column_dimensions[column_letter].width = max(
+                    ws.column_dimensions[column_letter].width or 0,
+                    min(max_len + 2, 80),
+                )
+                # Ajustar altura de la fila
+                lines = max(len(text.splitlines()), (len(text) // 40) + 1)
+                ws.row_dimensions[cell_obj.row].height = max(
+                    ws.row_dimensions[cell_obj.row].height or 15,
+                    lines * 15,
+                )
+
     except KeyError:
         raise CellReferenceError(f"Referencia de celda inválida: '{cell}'")
     except Exception as e:
@@ -1193,6 +1215,43 @@ def add_table(ws: Any, table_name: str, cell_range: str, style=None) -> Any:
         
         # Añadir tabla a la hoja
         ws.add_table(table)
+
+        # ------------------------------
+        # Ajuste automático de ancho de columnas y alto de filas
+        # sólo para el rango de la tabla
+        # ------------------------------
+        try:
+            start_row, start_col, end_row, end_col = ExcelRange.parse_range(cell_range)
+            # Ajustar columnas según el contenido más largo
+            for col in range(start_col, end_col + 1):
+                column_letter = get_column_letter(col + 1)
+                max_len = 0
+                for row in range(start_row, end_row + 1):
+                    value = ws.cell(row=row + 1, column=col + 1).value
+                    if value is not None:
+                        text = str(value)
+                        longest = max(len(line) for line in text.splitlines())
+                        max_len = max(max_len, longest)
+                        if len(text.splitlines()) > 1 or len(text) > 30:
+                            ws.cell(row=row + 1, column=col + 1).alignment = Alignment(wrap_text=True)
+                ws.column_dimensions[column_letter].width = max(ws.column_dimensions[column_letter].width or 0, max_len + 2)
+
+            # Ajustar alto de fila para celdas con texto largo
+            for row in range(start_row, end_row + 1):
+                max_lines = 1
+                for col in range(start_col, end_col + 1):
+                    value = ws.cell(row=row + 1, column=col + 1).value
+                    if value is not None:
+                        text = str(value)
+                        lines = len(text.splitlines())
+                        if len(text) > 40:
+                            lines = max(lines, (len(text) // 40) + 1)
+                        max_lines = max(max_lines, lines)
+                if max_lines > 1:
+                    ws.row_dimensions[row + 1].height = max(ws.row_dimensions[row + 1].height or 15, max_lines * 15)
+        except Exception:
+            pass
+
         return table
     
     except Exception as e:
