@@ -3912,6 +3912,102 @@ def export_excel_data(excel_file, export_config):
             "message": f"Error al exportar datos: {e}"
         }
 
+def export_single_visible_sheet_pdf(excel_file: str, output_pdf: Optional[str] = None) -> Dict[str, Any]:
+    """Exporta un libro de Excel a PDF solo si contiene una única hoja visible.
+
+    Args:
+        excel_file: Ruta al archivo Excel a exportar.
+        output_pdf: Ruta del archivo PDF resultante. Si no se indica se usa el
+            mismo nombre que ``excel_file`` con extensión ``.pdf``.
+
+    Returns:
+        dict: Resultado de la operación.
+    """
+    try:
+        import shutil
+        import subprocess
+
+        if not os.path.exists(excel_file):
+            raise FileNotFoundError(f"El archivo Excel no existe: {excel_file}")
+
+        wb = openpyxl.load_workbook(excel_file, data_only=True)
+        visible_sheets = [ws.title for ws in wb.worksheets if getattr(ws, "sheet_state", "visible") == "visible"]
+
+        if len(visible_sheets) != 1:
+            msg = f"El archivo debe tener una única hoja visible. Hojas visibles: {len(visible_sheets)}"
+            logger.warning(msg)
+            return {
+                "success": False,
+                "file_path": excel_file,
+                "visible_sheets": visible_sheets,
+                "message": msg,
+            }
+
+        if not output_pdf:
+            output_pdf = os.path.splitext(excel_file)[0] + ".pdf"
+        output_pdf = os.path.abspath(output_pdf)
+
+        # Intentar exportar con win32com (Windows)
+        try:
+            import win32com.client
+
+            excel = win32com.client.Dispatch("Excel.Application")
+            excel.Visible = False
+            workbook = excel.Workbooks.Open(os.path.abspath(excel_file))
+            workbook.ExportAsFixedFormat(0, output_pdf)
+            workbook.Close(False)
+            excel.Quit()
+
+            msg = f"Archivo exportado correctamente a PDF: {output_pdf}"
+            logger.info(msg)
+            return {
+                "success": True,
+                "file_path": excel_file,
+                "pdf_file": output_pdf,
+                "message": msg,
+            }
+        except ImportError:
+            logger.info("win32com no disponible, se intentará usar LibreOffice")
+        except Exception as e:
+            logger.error(f"Error al exportar con win32com: {e}")
+
+        # Fallback a LibreOffice en sistemas no Windows
+        soffice = shutil.which("soffice") or shutil.which("libreoffice")
+        if soffice:
+            outdir = os.path.dirname(output_pdf)
+            cmd = [soffice, "--headless", "--convert-to", "pdf", os.path.abspath(excel_file), "--outdir", outdir]
+            subprocess.run(cmd, check=True)
+
+            generated = os.path.join(outdir, Path(excel_file).stem + ".pdf")
+            if generated != output_pdf:
+                os.replace(generated, output_pdf)
+
+            msg = f"Archivo exportado correctamente a PDF: {output_pdf}"
+            logger.info(msg)
+            return {
+                "success": True,
+                "file_path": excel_file,
+                "pdf_file": output_pdf,
+                "message": msg,
+            }
+
+        msg = "No se encontró un método disponible para exportar a PDF."
+        logger.error(msg)
+        return {
+            "success": False,
+            "file_path": excel_file,
+            "message": msg,
+        }
+
+    except Exception as e:
+        logger.error(f"Error al exportar a PDF: {e}")
+        return {
+            "success": False,
+            "file_path": excel_file,
+            "error": str(e),
+            "message": f"Error al exportar a PDF: {e}",
+        }
+
 # Crear el servidor MCP como variable global
 mcp = None
 if HAS_MCP:
@@ -5122,6 +5218,11 @@ if HAS_MCP:
                 "error": str(e),
                 "message": f"Error al filtrar datos: {e}"
             }
+
+    @mcp.tool(description="Exporta un libro a PDF solo si tiene una única hoja visible")
+    def export_single_sheet_pdf_tool(excel_file, output_pdf=None):
+        """Exporta un archivo Excel a PDF si solo tiene una hoja visible."""
+        return export_single_visible_sheet_pdf(excel_file, output_pdf)
 
 if __name__ == "__main__":
     # Código de ejemplo de uso
