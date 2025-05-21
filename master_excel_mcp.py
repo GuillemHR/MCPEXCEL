@@ -1421,7 +1421,8 @@ def add_chart(wb: Any, sheet_name: str, chart_type: str, data_range: str,
             if chart_type.lower() != 'scatter':
                 if is_column_oriented:
                     # Datos organizados en columnas
-                    categories = Reference(data_ws, min_row=min_row, max_row=max_row, min_col=min_col, max_col=min_col)
+                    # Excluir la fila 1 de las categorías para no usar la cabecera en el eje X
+                    categories = Reference(data_ws, min_row=min_row+1, max_row=max_row, min_col=min_col, max_col=min_col)
                     data = Reference(data_ws, min_row=min_row, max_row=max_row, min_col=min_col+1, max_col=max_col)
                     # En Python 2 openpyxl puede no soportar el parámetro titles_from_data
                     try:
