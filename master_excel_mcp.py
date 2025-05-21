@@ -1691,6 +1691,8 @@ def create_chart_from_data(wb: Any, sheet_name: str, data: List[List[Any]], char
     ``add_chart`` intentará deducir si las categorías están en la primera fila o
     en la primera columna, por lo que conviene suministrar los encabezados de
     forma clara para evitar confusiones.
+    
+    """
 
     Args:
         wb: Objeto workbook de openpyxl
