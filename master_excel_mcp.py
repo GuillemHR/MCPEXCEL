@@ -37,6 +37,9 @@ contexto en cada operación:
 - **Buscar siempre la disposición más clara y ordenada**, separando secciones y
   agrupando los elementos relacionados para que el fichero final sea fácil de
   entender.
+- **Revisar la orientación de los datos**. Si las tablas no son obvias, indica
+  explícitamente si las categorías están en filas o columnas para que las
+  funciones de gráficos las interpreten correctamente.
 """
 
 import os
@@ -461,6 +464,52 @@ def apply_chart_style(chart, style):
     except Exception as e:
         logger.warning(f"Error al aplicar colores para estilo {style_number}: {e}")
         return False
+
+def determine_orientation(ws: Any, min_row: int, min_col: int, max_row: int, max_col: int) -> bool:
+    """Intenta deducir la orientación de los datos.
+
+    Devuelve ``True`` si las categorías parecen estar en la primera columna
+    (orientación por columnas) y ``False`` si lo más probable es que se
+    encuentren en la primera fila. El algoritmo compara la proporción de valores
+    numéricos al interpretar los datos de ambas maneras y usa la forma del rango
+    como desempate. Está pensado para que un LLM evite elegir encabezados
+    equivocados en tablas cuadradas o poco claras.
+    """
+
+    def _is_number(value: Any) -> bool:
+        return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+    # Calcular ratio de números asumiendo categorías en la primera columna
+    col_numeric = col_total = 0
+    for c in range(min_col + 1, max_col + 1):
+        for r in range(min_row, max_row + 1):
+            val = ws.cell(row=r, column=c).value
+            if val is not None:
+                col_total += 1
+                if _is_number(val):
+                    col_numeric += 1
+
+    col_ratio = (col_numeric / col_total) if col_total else 0
+
+    # Calcular ratio de números asumiendo categorías en la primera fila
+    row_numeric = row_total = 0
+    for r in range(min_row + 1, max_row + 1):
+        for c in range(min_col, max_col + 1):
+            val = ws.cell(row=r, column=c).value
+            if val is not None:
+                row_total += 1
+                if _is_number(val):
+                    row_numeric += 1
+
+    row_ratio = (row_numeric / row_total) if row_total else 0
+
+    if row_ratio > col_ratio:
+        return False  # encabezados en la primera fila
+    if col_ratio > row_ratio:
+        return True   # encabezados en la primera columna
+
+    # Desempate por forma del rango
+    return (max_row - min_row) >= (max_col - min_col)
 
 # ----------------------------------------
 # FUNCIONES BASE (reimplementadas de los módulos originales)
@@ -1187,11 +1236,18 @@ def set_formula(ws: Any, cell: str, formula: str) -> Any:
         raise FormulaError(f"Error al establecer fórmula: {e}")
 
 # 5. Gráficos y tablas dinámicas (de advanced_excel_mcp.py)
-def add_chart(wb: Any, sheet_name: str, chart_type: str, data_range: str, 
+def add_chart(wb: Any, sheet_name: str, chart_type: str, data_range: str,
              title=None, position=None, style=None, theme=None, custom_palette=None) -> Tuple[int, Any]:
     """
     Inserta gráfico nativo en la hoja.
-    
+
+    Se intenta deducir automáticamente si las categorías del gráfico están en la
+    primera fila o en la primera columna analizando el contenido del rango
+    indicado. Esta lógica evita que los encabezados se interpreten de forma
+    incorrecta cuando la tabla tiene más filas que columnas o es cuadrada. El
+    algoritmo se basa en :func:`determine_orientation` y está pensado para
+    resultar robusto cuando el código lo genera un LLM.
+
     Args:
         wb: Objeto workbook de openpyxl
         sheet_name (str): Nombre de la hoja donde insertar el gráfico
@@ -1279,8 +1335,8 @@ def add_chart(wb: Any, sheet_name: str, chart_type: str, data_range: str,
             max_row += 1
             max_col += 1
             
-            # Determinar si los datos están organizados en columnas o filas
-            is_column_oriented = (max_row - min_row) > (max_col - min_col)
+            # Determinar orientación analizando el contenido del rango
+            is_column_oriented = determine_orientation(ws, min_row, min_col, max_row, max_col)
             
             # Para gráficos que necesitan categorías (la mayoría excepto scatter)
             if chart_type.lower() != 'scatter':
@@ -1632,6 +1688,11 @@ def create_chart_from_data(wb: Any, sheet_name: str, data: List[List[Any]], char
     las columnas y aumenta su valor cuando sea necesario para que todo el texto
     quede visible. El parámetro ``style`` permite escoger entre los estilos
     predefinidos de la librería, facilitando resultados visualmente coherentes.
+    ``add_chart`` intentará deducir si las categorías están en la primera fila o
+    en la primera columna, por lo que conviene suministrar los encabezados de
+    forma clara para evitar confusiones.
+    
+    """
 
     Args:
         wb: Objeto workbook de openpyxl
