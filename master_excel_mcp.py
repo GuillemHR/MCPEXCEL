@@ -1751,7 +1751,7 @@ def create_chart_from_data(wb: Any, sheet_name: str, data: List[List[Any]], char
     en la primera columna, por lo que conviene suministrar los encabezados de
     forma clara para evitar confusiones.
     
-    """
+
 
     Args:
         wb: Objeto workbook de openpyxl
@@ -4051,7 +4051,8 @@ if HAS_MCP:
     
     @mcp.tool(description="Elimina la hoja indicada")
     def delete_sheet_tool(filename, sheet_name):
-        """Elimina la hoja indicada
+        """
+        Elimina la hoja indicada
         
         Esta función permite eliminar una hoja de cálculo específica de un libro Excel.
         Ten cuidado al usar esta función, ya que la eliminación es permanente una vez guardado el archivo.
@@ -4096,7 +4097,8 @@ if HAS_MCP:
     
     @mcp.tool(description="Renombra una hoja")
     def rename_sheet_tool(filename, old_name, new_name):
-        """Renombra una hoja
+        """
+        Renombra una hoja
         
         Esta función permite cambiar el nombre de una hoja de cálculo existente en un libro Excel.
         
@@ -4142,7 +4144,8 @@ if HAS_MCP:
     # Registrar funciones básicas de escritura
     @mcp.tool(description="Escribe un array bidimensional de valores o fórmulas")
     def write_sheet_data_tool(file_path, sheet_name, start_cell, data):
-        """Escribe un array bidimensional de valores o fórmulas en una hoja de Excel
+        """
+        Escribe un array bidimensional de valores o fórmulas en una hoja de Excel
         
         Esta función permite escribir datos en un rango de celdas de una hoja Excel, comenzando desde
         la celda especificada. Es ideal para insertar tablas de datos o matrices de valores.
@@ -4203,7 +4206,8 @@ if HAS_MCP:
     
     @mcp.tool(description="Actualiza individualmente una celda")
     def update_cell_tool(file_path, sheet_name, cell, value_or_formula):
-        """Actualiza el valor o fórmula de una celda específica en una hoja de Excel
+        """
+        Actualiza el valor o fórmula de una celda específica en una hoja de Excel
         
         Esta función permite modificar el contenido de una celda individual en una hoja de Excel.
         Puede usarse tanto para valores normales como para fórmulas.
@@ -4255,7 +4259,8 @@ if HAS_MCP:
     # Registrar funciones avanzadas
     @mcp.tool(description="Define un rango como Tabla con estilo en una hoja de Excel")
     def add_table_tool(file_path, sheet_name, table_name, cell_range, style=None):
-        """Define un rango como Tabla con estilo en Excel
+        """
+        Define un rango como Tabla con estilo en Excel
         
         Esta función convierte un rango de celdas en una tabla Excel con formato,
         lo que permite filtrar, ordenar y dar formato automáticamente a los datos.
@@ -4317,7 +4322,8 @@ if HAS_MCP:
     
     @mcp.tool(description="Inserta un gráfico nativo en una hoja de Excel con múltiples opciones de personalización")
     def add_chart_tool(file_path, sheet_name, chart_type, data_range, title=None, position=None, style=None, theme=None, custom_palette=None):
-        """Inserta un gráfico profesional nativo en una hoja de Excel
+        """
+        Inserta un gráfico profesional nativo en una hoja de Excel
         
         Esta función crea un gráfico basado en datos de la hoja de cálculo, con múltiples opciones
         de personalización para crear visualizaciones profesionales directamente en Excel.
