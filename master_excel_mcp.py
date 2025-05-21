@@ -270,6 +270,32 @@ class ExcelRange:
             return start_cell
         return f"{start_cell}:{end_cell}"
 
+    @staticmethod
+    def parse_range_with_sheet(range_str: str) -> Tuple[Optional[str], int, int, int, int]:
+        """Convierte un rango que puede incluir hoja a tupla ``(sheet, row1, col1, row2, col2)``.
+
+        Args:
+            range_str: Cadena de rango, posiblemente con prefijo de hoja ``Hoja!A1:B2``.
+
+        Returns:
+            Tupla ``(sheet, start_row, start_col, end_row, end_col)`` donde ``sheet``
+            es ``None`` si no se especificó hoja.
+        """
+        if not range_str or not isinstance(range_str, str):
+            raise ValueError(f"Rango inválido: {range_str}")
+
+        sheet_name = None
+        pure_range = range_str
+        if "!" in range_str:
+            parts = range_str.split("!", 1)
+            if len(parts) != 2:
+                raise ValueError(f"Formato de rango con hoja inválido: {range_str}")
+            sheet_name = parts[0].strip("'")
+            pure_range = parts[1]
+
+        start_row, start_col, end_row, end_col = ExcelRange.parse_range(pure_range)
+        return sheet_name, start_row, start_col, end_row, end_col
+
 # Constantes y mapeos
 # Mapeo de nombres de estilo a números de estilo de Excel
 CHART_STYLE_NAMES = {
@@ -1367,42 +1393,36 @@ def add_chart(wb: Any, sheet_name: str, chart_type: str, data_range: str,
         if title:
             chart.title = title
             
-        # Asegurarnos de que el rango tiene el formato correcto (no incluye nombre de hoja)
-        if '!' in data_range:
-            # Si ya tiene formato con nombre de hoja, lo dejamos como está
-            range_string = data_range
-            # Extraer solo la parte del rango después de !
-            clean_range = data_range.split('!')[1]
+        # Determinar si el rango hace referencia a otra hoja
+        data_sheet_name, sr, sc, er, ec = ExcelRange.parse_range_with_sheet(data_range)
+        if data_sheet_name is None:
+            data_sheet_name = sheet_name
+        data_ws = get_sheet(wb, data_sheet_name)
+
+        # Normalizar el rango para Reference (con nombre de hoja escapado)
+        if " " in data_sheet_name or any(c in data_sheet_name for c in "![]{}?"):
+            sheet_prefix = f"'{data_sheet_name}'!"
         else:
-            clean_range = data_range
-            # Añadir el nombre de la hoja al rango para cumplir con el formato requerido
-            # Escapar nombres de hojas con espacios o caracteres especiales
-            if ' ' in sheet_name or any(c in sheet_name for c in "![]{}?"):
-                sheet_prefix = f"'{sheet_name}'!"
-            else:
-                sheet_prefix = f"{sheet_name}!"
-            range_string = f"{sheet_prefix}{data_range}"
+            sheet_prefix = f"{data_sheet_name}!"
+        clean_range = ExcelRange.range_to_a1(sr, sc, er, ec)
         
         # Parsear rango de datos
         try:
-            # Parsear el rango para obtener los límites
-            min_row, min_col, max_row, max_col = ExcelRange.parse_range(clean_range)
-            
-            # Ajustar a base 1 para Reference
-            min_row += 1
-            min_col += 1
-            max_row += 1
-            max_col += 1
+            # Usar los límites calculados previamente
+            min_row = sr + 1
+            min_col = sc + 1
+            max_row = er + 1
+            max_col = ec + 1
             
             # Determinar orientación analizando el contenido del rango
-            is_column_oriented = determine_orientation(ws, min_row, min_col, max_row, max_col)
+            is_column_oriented = determine_orientation(data_ws, min_row, min_col, max_row, max_col)
             
             # Para gráficos que necesitan categorías (la mayoría excepto scatter)
             if chart_type.lower() != 'scatter':
                 if is_column_oriented:
                     # Datos organizados en columnas
-                    categories = Reference(ws, min_row=min_row, max_row=max_row, min_col=min_col, max_col=min_col)
-                    data = Reference(ws, min_row=min_row, max_row=max_row, min_col=min_col+1, max_col=max_col)
+                    categories = Reference(data_ws, min_row=min_row, max_row=max_row, min_col=min_col, max_col=min_col)
+                    data = Reference(data_ws, min_row=min_row, max_row=max_row, min_col=min_col+1, max_col=max_col)
                     # En Python 2 openpyxl puede no soportar el parámetro titles_from_data
                     try:
                         chart.add_data(data, titles_from_data=True)
@@ -1412,8 +1432,8 @@ def add_chart(wb: Any, sheet_name: str, chart_type: str, data_range: str,
                     chart.set_categories(categories)
                 else:
                     # Datos organizados en filas
-                    categories = Reference(ws, min_row=min_row, max_row=min_row, min_col=min_col, max_col=max_col)
-                    data = Reference(ws, min_row=min_row+1, max_row=max_row, min_col=min_col, max_col=max_col)
+                    categories = Reference(data_ws, min_row=min_row, max_row=min_row, min_col=min_col, max_col=max_col)
+                    data = Reference(data_ws, min_row=min_row+1, max_row=max_row, min_col=min_col, max_col=max_col)
                     # En Python 2 openpyxl puede no soportar el parámetro titles_from_data
                     try:
                         chart.add_data(data, titles_from_data=True)
@@ -1423,7 +1443,7 @@ def add_chart(wb: Any, sheet_name: str, chart_type: str, data_range: str,
                     chart.set_categories(categories)
             else:
                 # Para gráficos de dispersión
-                data_ref = Reference(ws, min_row=min_row, min_col=min_col, max_row=max_row, max_col=max_col)
+                data_ref = Reference(data_ws, min_row=min_row, min_col=min_col, max_row=max_row, max_col=max_col)
                 chart.add_data(data_ref)
         
         except Exception as e:
