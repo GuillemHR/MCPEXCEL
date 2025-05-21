@@ -1847,8 +1847,54 @@ def create_chart_from_data(wb: Any, sheet_name: str, data: List[List[Any]], char
     except Exception as e:
         logger.error(f"Error al crear gráfico: {e}")
         raise ChartError(f"Error al crear gráfico: {e}")
-    
+
     return result
+
+def create_chart_from_dataframe(wb: Any, sheet_name: str, df: 'pd.DataFrame', chart_type: str,
+                                position: Optional[str] = None, title: Optional[str] = None,
+                                style: Optional[Any] = None, create_table: bool = False,
+                                table_name: Optional[str] = None, table_style: Optional[str] = None) -> Dict[str, Any]:
+    """Crea un gráfico nativo a partir de un DataFrame de pandas.
+
+    Esta implementación reemplaza enfoques antiguos basados en `matplotlib` que
+    insertaban imágenes PNG mediante ``insert_image``. Ahora los datos del
+    ``DataFrame`` se escriben en celdas y se utilizan las clases de ``openpyxl``
+    para generar un gráfico totalmente editable en Excel.
+
+    Args:
+        wb: Objeto workbook de openpyxl
+        sheet_name: Nombre de la hoja donde crear el gráfico
+        df: Datos de origen en formato ``pandas.DataFrame``
+        chart_type: Tipo de gráfico ('column', 'bar', 'line', 'pie', etc.)
+        position: Celda de anclaje para el gráfico
+        title: Título del gráfico
+        style: Estilo opcional del gráfico
+        create_table: Si ``True`` crea una tabla con los datos
+        table_name: Nombre de la tabla a crear
+        table_style: Estilo de la tabla
+
+    Returns:
+        Diccionario con información sobre el gráfico y la tabla creados
+    """
+
+    if df is None:
+        raise ExcelMCPError("El DataFrame proporcionado es None")
+
+    # Convertir el DataFrame a lista de listas incluyendo encabezados
+    data = [df.columns.tolist()] + df.values.tolist()
+
+    return create_chart_from_data(
+        wb,
+        sheet_name,
+        data,
+        chart_type,
+        position=position,
+        title=title,
+        style=style,
+        create_table=create_table,
+        table_name=table_name,
+        table_style=table_style,
+    )
 
 def create_report(wb: Any, data: Dict[str, List[List[Any]]], tables: Optional[Dict[str, Dict[str, Any]]] = None,
                  charts: Optional[Dict[str, Dict[str, Any]]] = None, formats: Optional[Dict[str, Dict[str, Any]]] = None,
