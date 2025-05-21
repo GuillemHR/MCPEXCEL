@@ -17,6 +17,26 @@ Este módulo integra:
 
 Author: MCP Team
 Version: 1.0
+
+Guía de uso para LLM y agentes
+------------------------------
+Todas las funciones de esta biblioteca están pensadas para ser utilizadas por
+modelos de lenguaje o herramientas automáticas que generan archivos Excel.
+Para obtener los mejores resultados se deben seguir estas recomendaciones de
+contexto en cada operación:
+
+- **Aplicar estilos en todo momento** para que las hojas resultantes sean
+  visualmente agradables. Utiliza las funciones de esta librería para asignar
+  estilos a celdas, tablas y gráficos.
+- **Evitar la superposición de elementos**. Coloca los gráficos en celdas libres
+  y deja al menos un par de filas de separación respecto a tablas o bloques de
+  texto. Nunca sitúes gráficos encima de texto.
+- **Ajustar automáticamente el ancho de columnas**. Tras escribir tablas o
+  conjuntos de datos revisa qué celdas contienen textos largos y aumenta la
+  anchura de la columna para que todo sea legible sin romper el diseño.
+- **Buscar siempre la disposición más clara y ordenada**, separando secciones y
+  agrupando los elementos relacionados para que el fichero final sea fácil de
+  entender.
 """
 
 import os
@@ -858,7 +878,13 @@ def list_charts(wb: Any, sheet_name: str) -> List[Dict[str, Any]]:
 def write_sheet_data(ws: Any, start_cell: str, data: List[List[Any]]) -> None:
     """
     Escribe un array bidimensional de valores o fórmulas.
-    
+
+    Para garantizar que la salida sea legible cuando la función es utilizada por
+    un modelo de lenguaje se recomienda aplicar estilos tras la escritura y
+    comprobar la longitud de las celdas resultantes. Si alguna columna contiene
+    textos muy largos, se debe aumentar su ancho para evitar que el contenido se
+    corte. De esta forma los ficheros generados tendrán un aspecto profesional.
+
     Args:
         ws: Objeto worksheet de openpyxl
         start_cell (str): Celda de anclaje (e.j. "A1")
@@ -1593,12 +1619,20 @@ def create_chart_from_table(wb: Any, sheet_name: str, table_name: str, chart_typ
     return chart_id, chart
 
 def create_chart_from_data(wb: Any, sheet_name: str, data: List[List[Any]], chart_type: str,
-                          position: Optional[str] = None, title: Optional[str] = None, 
+                          position: Optional[str] = None, title: Optional[str] = None,
                           style: Optional[Any] = None, create_table: bool = False,
                           table_name: Optional[str] = None, table_style: Optional[str] = None) -> Dict[str, Any]:
     """
     Crea un gráfico a partir de datos nuevos en un solo paso.
-    
+
+    Esta función está pensada para ser invocada por un LLM que construye
+    informes. Por ello describe buenas prácticas para evitar errores comunes:
+    asegúrate de colocar el gráfico en una celda libre para que no se superponga
+    con tablas ni con texto. Si se generan datos tabulares, revisa el ancho de
+    las columnas y aumenta su valor cuando sea necesario para que todo el texto
+    quede visible. El parámetro ``style`` permite escoger entre los estilos
+    predefinidos de la librería, facilitando resultados visualmente coherentes.
+
     Args:
         wb: Objeto workbook de openpyxl
         sheet_name (str): Nombre de la hoja donde crear el gráfico
@@ -1681,7 +1715,15 @@ def create_report(wb: Any, data: Dict[str, List[List[Any]]], tables: Optional[Di
                  overwrite_sheets: bool = False) -> Dict[str, Any]:
     """
     Crea un informe completo con múltiples hojas, tablas y gráficos en un solo paso.
-    
+
+    Esta función sirve como plantilla general para generadores automáticos de
+    informes. Todas las hojas creadas deben quedar ordenadas y con estilos
+    aplicados. Se recomienda verificar el espacio libre antes de insertar
+    gráficos para que no queden encima de ninguna tabla o bloque de texto. Tras
+    crear una tabla, comprueba qué columna tiene cadenas más largas y ajusta su
+    ancho para que el contenido sea visible sin necesidad de editar manualmente
+    el archivo.
+
     Args:
         wb: Objeto workbook de openpyxl
         data: Diccionario con datos por hoja: {"Hoja1": [[datos]], "Hoja2": [[datos]]}
@@ -1820,11 +1862,18 @@ def create_report(wb: Any, data: Dict[str, List[List[Any]]], tables: Optional[Di
     
     return result
 
-def create_dashboard(wb: Any, dashboard_config: Dict[str, Any], 
+def create_dashboard(wb: Any, dashboard_config: Dict[str, Any],
                     create_new: bool = True) -> Dict[str, Any]:
     """
     Crea un dashboard completo con tablas, gráficos y filtros interactivos.
-    
+
+    Está pensado para que un agente automático construya una hoja atractiva y
+    sin solapamientos. Coloca cada gráfico dejando espacio respecto a tablas o
+    textos previos. Tras escribir los datos de cada sección revisa el tamaño de
+    las columnas y amplíalas cuando alguna celda sea especialmente larga. De esa
+    forma se garantiza que la lectura sea cómoda sin modificar manualmente el
+    archivo.
+
     Args:
         wb: Objeto workbook de openpyxl
         dashboard_config: Diccionario con configuración completa del dashboard
@@ -3000,7 +3049,12 @@ def create_report_from_template(template_file, output_file, data_mappings, chart
 def create_dynamic_dashboard(file_path, data, dashboard_config, overwrite=False):
     """
     Crea un dashboard dinámico con múltiples visualizaciones en un solo paso.
-    
+
+    Los modelos que utilicen esta función deben procurar que las tablas y los
+    gráficos no se solapen. Es aconsejable dejar filas de separación y comprobar
+    el ancho necesario de cada columna tras escribir los datos. Aplicar estilos
+    coherentes ayuda a que el resultado sea más limpio y profesional.
+
     Args:
         file_path (str): Ruta al archivo Excel a crear o modificar
         data (dict): Diccionario con datos por hoja:
