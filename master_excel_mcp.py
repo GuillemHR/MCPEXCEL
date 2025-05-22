@@ -1332,34 +1332,48 @@ def set_formula(ws: Any, cell: str, formula: str) -> Any:
         raise FormulaError(f"Error al establecer fórmula: {e}")
 
 # 5. Gráficos y tablas dinámicas (de advanced_excel_mcp.py)
-def add_chart(wb: Any, sheet_name: str, chart_type: str, data_range: str,
-             title=None, position=None, style=None, theme=None, custom_palette=None) -> Tuple[int, Any]:
-    """
-    Inserta gráfico nativo en la hoja.
+def add_chart(
+    wb: Any,
+    sheet_name: str,
+    chart_type: str,
+    data_range: str,
+    title=None,
+    position=None,
+    style=None,
+    theme=None,
+    custom_palette=None,
+) -> Tuple[int, Any]:
+    """Inserta un gráfico nativo utilizando los datos del rango indicado.
 
-    Se intenta deducir automáticamente si las categorías del gráfico están en la
-    primera fila o en la primera columna analizando el contenido del rango
-    indicado. Esta lógica evita que los encabezados se interpreten de forma
-    incorrecta cuando la tabla tiene más filas que columnas o es cuadrada. El
-    algoritmo se basa en :func:`determine_orientation` y está pensado para
-    resultar robusto cuando el código lo genera un LLM.
+    ``data_range`` debe referirse a una tabla rectangular sin celdas vacías en
+    la zona de valores. La primera fila o la primera columna se interpretan como
+    encabezados y categorías, según determine_orientation. Todas las series deben
+    contener únicamente números y tener la misma longitud que el vector de
+    categorías. Si existen filas de totales o columnas mezcladas, el gráfico
+    podría crearse de forma incorrecta.
+
+    Valida previamente que el rango pertenezca a la hoja correcta y que los
+    encabezados estén presentes, ya que las series se añaden con
+    ``titles_from_data=True``. Las categorías no deben contener valores en blanco
+    ni duplicados, y las columnas numéricas no pueden incluir texto.
 
     Args:
-        wb: Objeto workbook de openpyxl
-        sheet_name (str): Nombre de la hoja donde insertar el gráfico
-        chart_type (str): Tipo de gráfico ('column', 'bar', 'line', 'pie', etc.)
-        data_range (str): Rango de datos en formato A1:B5
-        title (str, opcional): Título del gráfico
-        position (str, opcional): Celda de anclaje (ej. "E5")
-        style: Estilo del gráfico (número 1-48, nombre descriptivo, etc.)
-        theme (str, opcional): Nombre del tema de color
-        custom_palette (list, opcional): Lista de colores personalizados
-        
+        wb: Objeto ``Workbook`` de openpyxl.
+        sheet_name: Nombre de la hoja donde insertar el gráfico.
+        chart_type: Tipo de gráfico (``'column'``, ``'bar'``, ``'line'``,
+            ``'pie'``, etc.).
+        data_range: Rango de datos en formato ``A1:B5``.
+        title: Título opcional del gráfico.
+        position: Celda donde colocar el gráfico (por ejemplo ``"E5"``).
+        style: Estilo del gráfico (número ``1``–``48`` o nombre descriptivo).
+        theme: Nombre del tema de color.
+        custom_palette: Lista de colores personalizados.
+
     Returns:
-        Tupla con (id del gráfico, objeto chart)
-        
+        Tupla ``(id del gráfico, objeto chart)``.
+
     Raises:
-        ChartError: Si hay un problema con el gráfico
+        ChartError: Si ocurre un problema al crear el gráfico.
     """
     if not wb:
         raise ExcelMCPError("El workbook no puede ser None")
@@ -1723,24 +1737,43 @@ def create_formatted_table(wb: Any, sheet_name: str, start_cell: str, data: List
     
     return table, ws
 
-def create_chart_from_table(wb: Any, sheet_name: str, table_name: str, chart_type: str,
-                           title: Optional[str] = None, position: Optional[str] = None,
-                           style: Optional[Any] = None, use_headers: bool = True) -> Tuple[int, Any]:
-    """
-    Crea un gráfico a partir de una tabla existente.
-    
+def create_chart_from_table(
+    wb: Any,
+    sheet_name: str,
+    table_name: str,
+    chart_type: str,
+    title: Optional[str] = None,
+    position: Optional[str] = None,
+    style: Optional[Any] = None,
+    use_headers: bool = True,
+) -> Tuple[int, Any]:
+    """Genera un gráfico a partir de una tabla existente.
+
+    La tabla debe contener encabezados válidos y no incluir filas de totales.
+    Se asume que las celdas de datos forman un rango rectangular sin valores en
+    blanco. Cuando ``use_headers`` es ``True`` la primera fila de la tabla se
+    toma como títulos de las series y como categorías. Todas las columnas de
+    datos deben ser numéricas y de igual longitud para evitar errores al crear
+    el gráfico.
+
+    Revisa que la tabla no contenga celdas vacías ni columnas de texto donde se
+    esperan números. Cualquier discrepancia en la longitud de las series o en la
+    cantidad de categorías puede provocar gráficos incompletos o vacíos.
+
     Args:
-        wb: Objeto workbook de openpyxl
-        sheet_name (str): Nombre de la hoja donde está la tabla
-        table_name (str): Nombre de la tabla a usar como fuente de datos
-        chart_type (str): Tipo de gráfico ('column', 'bar', 'line', 'pie', etc.)
-        title (str, opcional): Título del gráfico
-        position (str, opcional): Celda de anclaje para el gráfico (ej. "E5")
-        style: Estilo del gráfico (número 1-48, nombre descriptivo, etc.)
-        use_headers (bool): Si True, usa la primera fila como encabezados/categorías
-        
+        wb: Objeto ``Workbook`` de openpyxl.
+        sheet_name: Nombre de la hoja donde está la tabla.
+        table_name: Nombre de la tabla a utilizar como origen.
+        chart_type: Tipo de gráfico (``'column'``, ``'bar'``, ``'line'``, ``'pie'``,
+            etc.).
+        title: Título opcional del gráfico.
+        position: Celda de anclaje para el gráfico.
+        style: Estilo del gráfico (número ``1``–``48`` o nombre descriptivo).
+        use_headers: Si ``True`` toma la primera fila como encabezados y
+            categorías.
+
     Returns:
-        Tupla (ID del gráfico, objeto gráfico)
+        Tupla ``(ID del gráfico, objeto gráfico)``.
     """
     # Obtener la hoja
     ws = get_sheet(wb, sheet_name)
@@ -1765,40 +1798,49 @@ def create_chart_from_table(wb: Any, sheet_name: str, table_name: str, chart_typ
     
     return chart_id, chart
 
-def create_chart_from_data(wb: Any, sheet_name: str, data: List[List[Any]], chart_type: str,
-                          position: Optional[str] = None, title: Optional[str] = None,
-                          style: Optional[Any] = None, create_table: bool = False,
-                          table_name: Optional[str] = None, table_style: Optional[str] = None) -> Dict[str, Any]:
-    """
-    Crea un gráfico a partir de datos nuevos en un solo paso.
+def create_chart_from_data(
+    wb: Any,
+    sheet_name: str,
+    data: List[List[Any]],
+    chart_type: str,
+    position: Optional[str] = None,
+    title: Optional[str] = None,
+    style: Optional[Any] = None,
+    create_table: bool = False,
+    table_name: Optional[str] = None,
+    table_style: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Crea un gráfico a partir de ``data`` escribiendo primero los datos.
 
-    Esta función está pensada para ser invocada por un LLM que construye
-    informes. Por ello describe buenas prácticas para evitar errores comunes:
-    asegúrate de colocar el gráfico en una celda libre para que no se superponga
-    con tablas ni con texto. Si se generan datos tabulares, revisa el ancho de
-    las columnas y aumenta su valor cuando sea necesario para que todo el texto
-    quede visible. El parámetro ``style`` permite escoger entre los estilos
-    predefinidos de la librería, facilitando resultados visualmente coherentes.
-    ``add_chart`` intentará deducir si las categorías están en la primera fila o
-    en la primera columna, por lo que conviene suministrar los encabezados de
-    forma clara para evitar confusiones.
-    
+    ``data`` debe ser una lista de listas con una estructura rectangular y sin
+    celdas vacías. La primera fila o columna se interpreta como encabezados y
+    categorías; por ello todas las filas deben tener la misma longitud y las
+    columnas numéricas no deben contener texto. Evita incluir filas de totales o
+    registros que no deban graficarse.
 
+    Antes de llamar a la función verifica que no existan celdas en blanco,
+    encabezados duplicados ni longitudes desiguales entre categorías y series.
+    ``add_chart`` utilizará ``titles_from_data=True`` para asignar los nombres de
+    serie. Si las series no son coherentes, el gráfico resultante podría quedar
+    incompleto o mostrar errores.
 
     Args:
-        wb: Objeto workbook de openpyxl
-        sheet_name (str): Nombre de la hoja donde crear el gráfico
-        data (List[List]): Datos para el gráfico, incluyendo encabezados
-        chart_type (str): Tipo de gráfico ('column', 'bar', 'line', 'pie', etc.)
-        position (str, opcional): Celda de anclaje para el gráfico (ej. "E5")
-        title (str, opcional): Título del gráfico
-        style: Estilo del gráfico (número 1-48, nombre descriptivo, etc.)
-        create_table (bool): Si True, crea una tabla con los datos
-        table_name (str, opcional): Nombre para la tabla (requerido si create_table=True)
-        table_style (str, opcional): Estilo para la tabla
-        
+        wb: Objeto ``Workbook`` de openpyxl.
+        sheet_name: Nombre de la hoja donde crear el gráfico.
+        data: Matriz de datos que incluye los encabezados.
+        chart_type: Tipo de gráfico (``'column'``, ``'bar'``, ``'line'``,
+            ``'pie'``, etc.).
+        position: Celda donde colocar el gráfico.
+        title: Título del gráfico.
+        style: Estilo del gráfico (número ``1``–``48`` o nombre descriptivo).
+        create_table: Si ``True`` crea una tabla con los datos escritos.
+        table_name: Nombre de la tabla (obligatorio si ``create_table`` es
+            ``True``).
+        table_style: Estilo opcional para la tabla.
+
     Returns:
-        Diccionario con información del gráfico y la tabla creados
+        Diccionario con información del gráfico y, en su caso, de la tabla
+        creada.
     """
     # Crear hoja si no existe
     if sheet_name not in list_sheets(wb):
@@ -1862,31 +1904,43 @@ def create_chart_from_data(wb: Any, sheet_name: str, data: List[List[Any]], char
 
     return result
 
-def create_chart_from_dataframe(wb: Any, sheet_name: str, df: 'pd.DataFrame', chart_type: str,
-                                position: Optional[str] = None, title: Optional[str] = None,
-                                style: Optional[Any] = None, create_table: bool = False,
-                                table_name: Optional[str] = None, table_style: Optional[str] = None) -> Dict[str, Any]:
-    """Crea un gráfico nativo a partir de un DataFrame de pandas.
+def create_chart_from_dataframe(
+    wb: Any,
+    sheet_name: str,
+    df: 'pd.DataFrame',
+    chart_type: str,
+    position: Optional[str] = None,
+    title: Optional[str] = None,
+    style: Optional[Any] = None,
+    create_table: bool = False,
+    table_name: Optional[str] = None,
+    table_style: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Genera un gráfico a partir de un ``DataFrame`` de pandas.
 
-    Esta implementación reemplaza enfoques antiguos basados en `matplotlib` que
-    insertaban imágenes PNG mediante ``insert_image``. Ahora los datos del
-    ``DataFrame`` se escriben en celdas y se utilizan las clases de ``openpyxl``
-    para generar un gráfico totalmente editable en Excel.
+    El ``DataFrame`` debe contener columnas numéricas sin valores faltantes en
+    las series y no incluir filas de totales. Los encabezados se utilizan como
+    títulos de las series, por lo que es importante que no haya duplicados ni
+    celdas en blanco. El contenido del ``DataFrame`` se escribe en la hoja y se
+    delega a :func:`create_chart_from_data`, por lo que aplican las mismas
+    recomendaciones sobre validación previa.
 
     Args:
-        wb: Objeto workbook de openpyxl
-        sheet_name: Nombre de la hoja donde crear el gráfico
-        df: Datos de origen en formato ``pandas.DataFrame``
-        chart_type: Tipo de gráfico ('column', 'bar', 'line', 'pie', etc.)
-        position: Celda de anclaje para el gráfico
-        title: Título del gráfico
-        style: Estilo opcional del gráfico
-        create_table: Si ``True`` crea una tabla con los datos
-        table_name: Nombre de la tabla a crear
-        table_style: Estilo de la tabla
+        wb: Objeto ``Workbook`` de openpyxl.
+        sheet_name: Nombre de la hoja donde crear el gráfico.
+        df: Datos en formato ``pandas.DataFrame``.
+        chart_type: Tipo de gráfico (``'column'``, ``'bar'``, ``'line'``,
+            ``'pie'``, etc.).
+        position: Celda de anclaje para el gráfico.
+        title: Título del gráfico.
+        style: Estilo opcional del gráfico.
+        create_table: Si ``True`` crea una tabla con los datos escritos.
+        table_name: Nombre de la tabla a crear.
+        table_style: Estilo de la tabla.
 
     Returns:
-        Diccionario con información sobre el gráfico y la tabla creados
+        Diccionario con información del gráfico y, en su caso, de la tabla
+        generada.
     """
 
     if df is None:
