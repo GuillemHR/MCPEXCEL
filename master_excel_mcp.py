@@ -3,43 +3,40 @@
 
 """
 Excel MCP Master (Model Context Protocol for Excel)
--------------------------------------------------------
-Biblioteca unificada para manipular archivos Excel con funcionalidades avanzadas:
-- Combina todos los módulos Excel MCP en una interfaz unificada
-- Proporciona funciones de alto nivel para operaciones comunes
-- Optimiza el flujo de trabajo con Excel
+--------------------------------------------------
+Unified library to manipulate Excel files with advanced features:
+- Combines all Excel MCP modules under a single interface
+- Provides high level functions for common operations
+- Optimizes the workflow when working with Excel
 
-Este módulo integra:
-- excel_mcp_complete.py: Lectura y exploración de datos
-- workbook_manager_mcp.py: Gestión de libros y hojas
-- excel_writer_mcp.py: Escritura y formato de celdas
-- advanced_excel_mcp.py: Tablas, fórmulas, gráficos y tablas dinámicas
+This module integrates:
+- excel_mcp_complete.py: Data reading and exploration
+- workbook_manager_mcp.py: Workbook and sheet management
+- excel_writer_mcp.py: Cell writing and formatting
+- advanced_excel_mcp.py: Tables, formulas, charts and pivot tables
 
 Author: MCP Team
 Version: 1.0
 
-Guía de uso para LLM y agentes
-------------------------------
-Todas las funciones de esta biblioteca están pensadas para ser utilizadas por
-modelos de lenguaje o herramientas automáticas que generan archivos Excel.
-Para obtener los mejores resultados se deben seguir estas recomendaciones de
-contexto en cada operación:
+Usage guide for LLMs and agents
+-------------------------------
+All functions of this library are designed to be used by language models or
+automatic tools that generate Excel files. To obtain the best results, follow
+these context recommendations for each operation:
 
-- **Aplicar estilos en todo momento** para que las hojas resultantes sean
-  visualmente agradables. Utiliza las funciones de esta librería para asignar
-  estilos a celdas, tablas y gráficos.
-- **Evitar la superposición de elementos**. Coloca los gráficos en celdas libres
-  y deja al menos un par de filas de separación respecto a tablas o bloques de
-  texto. Nunca sitúes gráficos encima de texto.
-- **Ajustar automáticamente el ancho de columnas**. Tras escribir tablas o
-  conjuntos de datos revisa qué celdas contienen textos largos y aumenta la
-  anchura de la columna para que todo sea legible sin romper el diseño.
-- **Buscar siempre la disposición más clara y ordenada**, separando secciones y
-  agrupando los elementos relacionados para que el fichero final sea fácil de
-  entender.
-- **Revisar la orientación de los datos**. Si las tablas no son obvias, indica
-  explícitamente si las categorías están en filas o columnas para que las
-  funciones de gráficos las interpreten correctamente.
+- **Apply styles at all times** so the resulting sheets look visually pleasant.
+  Use the functions in this library to style cells, tables and charts.
+- **Avoid element overlap**. Place charts in free cells and leave at least a
+  couple of rows of separation from tables or blocks of text. Never place charts
+  over text.
+- **Automatically adjust column width**. After writing tables or datasets,
+  check which cells contain long text and increase the width so everything is
+  readable without breaking the layout.
+- **Always seek the clearest and most organised layout**, separating sections
+  and grouping related elements so that the final file is easy to understand.
+- **Check the orientation of the data**. If tables are not obvious, explicitly
+  indicate whether the categories are in rows or columns so the chart functions
+  interpret them correctly.
 """
 
 import os
@@ -52,14 +49,14 @@ from pathlib import Path
 from typing import List, Dict, Union, Optional, Tuple, Any, Callable
 import math
 
-# Configuración de logging
+# Logging configuration
 logger = logging.getLogger("excel_mcp_master")
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler(sys.stderr)
 handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 logger.addHandler(handler)
 
-# Importar MCP
+# Import MCP
 try:
     from mcp.server.fastmcp import FastMCP
     HAS_MCP = True
@@ -91,56 +88,56 @@ except ImportError as e:
     logger.warning("Es posible que algunas funcionalidades no estén disponibles")
     HAS_OPENPYXL = False
 
-# Importar módulos Excel MCP existentes
-# Nota: En una implementación real, importaríamos las funciones de los módulos existentes
-# Sin embargo, para este caso, vamos a reimplementar las funciones clave directamente
+# Import existing Excel MCP modules
+# Note: In a real implementation we would import the functions from the existing modules
+# However, for this example the key functions are reimplemented directly
 
-# Clases base de excepciones (unificadas)
+# Base exception classes (unified)
 class ExcelMCPError(Exception):
-    """Excepción base para todos los errores de Excel MCP."""
+    """Base exception for all Excel MCP errors."""
     pass
 
 class FileNotFoundError(ExcelMCPError):
-    """Se lanza cuando no se encuentra un archivo Excel."""
+    """Raised when an Excel file is not found."""
     pass
 
 class FileExistsError(ExcelMCPError):
-    """Se lanza cuando se intenta crear un archivo que ya existe."""
+    """Raised when attempting to create a file that already exists."""
     pass
 
 class SheetNotFoundError(ExcelMCPError):
-    """Se lanza cuando no se encuentra una hoja en el archivo Excel."""
+    """Raised when a sheet is not found in the Excel file."""
     pass
 
 class SheetExistsError(ExcelMCPError):
-    """Se lanza cuando se intenta crear una hoja que ya existe."""
+    """Raised when attempting to create a sheet that already exists."""
     pass
 
 class CellReferenceError(ExcelMCPError):
-    """Se lanza cuando hay un problema con una referencia de celda."""
+    """Raised when there is an issue with a cell reference."""
     pass
 
 class RangeError(ExcelMCPError):
-    """Se lanza cuando hay un problema con un rango de celdas."""
+    """Raised when there is an issue with a cell range."""
     pass
 
 class TableError(ExcelMCPError):
-    """Se lanza cuando hay un problema con una tabla de Excel."""
+    """Raised when there is an issue with an Excel table."""
     pass
 
 class ChartError(ExcelMCPError):
-    """Se lanza cuando hay un problema con un gráfico."""
+    """Raised when there is an issue with a chart."""
     pass
 
 class FormulaError(ExcelMCPError):
-    """Se lanza cuando hay un problema con una fórmula."""
+    """Raised when there is an issue with a formula."""
     pass
 
 class PivotTableError(ExcelMCPError):
-    """Se lanza cuando hay un problema con una tabla dinámica."""
+    """Raised when there is an issue with a pivot table."""
     pass
 
-# Utilidades comunes 
+# Common utilities 
 class ExcelRange:
     """
     Clase para manipular y convertir rangos de Excel.
@@ -152,16 +149,16 @@ class ExcelRange:
     @staticmethod
     def parse_cell_ref(cell_ref: str) -> Tuple[int, int]:
         """
-        Convierte una referencia de celda en estilo A1 a coordenadas (fila, columna) 0-based.
+        Convert an A1-style cell reference to zero-based (row, column) coordinates.
         
         Args:
-            cell_ref: Referencia de celda en formato Excel (ej: 'A1', 'B5')
+            cell_ref: Cell reference in Excel format (e.g. "A1", "B5")
             
         Returns:
-            Tupla (fila, columna) con índices base 0
+            Tuple (row, column) using zero-based indices
             
         Raises:
-            ValueError: Si la referencia de celda no es válida
+            ValueError: If the cell reference is not valid
         """
         if not cell_ref or not isinstance(cell_ref, str):
             raise ValueError(f"Referencia de celda inválida: {cell_ref}")
@@ -188,16 +185,16 @@ class ExcelRange:
     @staticmethod
     def parse_range(range_str: str) -> Tuple[int, int, int, int]:
         """
-        Convierte un rango en estilo A1:B5 a coordenadas (row1, col1, row2, col2) 0-based.
+        Convert a range in A1:B5 style to zero-based coordinates (row1, col1, row2, col2).
         
         Args:
-            range_str: Rango en formato Excel (ej: 'A1:B5')
+            range_str: Range in Excel format (e.g. "A1:B5")
             
         Returns:
-            Tupla (fila_inicio, col_inicio, fila_fin, col_fin) con índices base 0
+            Tuple (start_row, start_col, end_row, end_col) using zero-based indices
             
         Raises:
-            ValueError: Si el rango no es válido
+            ValueError: If the range is not valid
         """
         if not range_str or not isinstance(range_str, str):
             raise ValueError(f"Rango inválido: {range_str}")
@@ -224,14 +221,14 @@ class ExcelRange:
     @staticmethod
     def cell_to_a1(row: int, col: int) -> str:
         """
-        Convierte coordenadas (fila, columna) 0-based a referencia de celda A1.
+        Convert zero-based (row, column) coordinates to an A1 cell reference.
         
         Args:
-            row: Índice de fila (base 0)
-            col: Índice de columna (base 0)
+            row: Row index (zero-based)
+            col: Column index (zero-based)
             
         Returns:
-            Referencia de celda en formato A1
+            Cell reference in A1 format
         """
         if row < 0 or col < 0:
             raise ValueError(f"Índices negativos no válidos: fila={row}, columna={col}")
@@ -253,16 +250,16 @@ class ExcelRange:
     @staticmethod
     def range_to_a1(start_row: int, start_col: int, end_row: int, end_col: int) -> str:
         """
-        Convierte coordenadas de rango 0-based a rango A1:B5.
+        Convert zero-based range coordinates to an A1:B5 style range.
         
         Args:
-            start_row: Fila inicial (base 0)
-            start_col: Columna inicial (base 0)
-            end_row: Fila final (base 0)
-            end_col: Columna final (base 0)
+            start_row: Starting row (zero-based)
+            start_col: Starting column (zero-based)
+            end_row: Ending row (zero-based)
+            end_col: Ending column (zero-based)
             
         Returns:
-            Rango en formato A1:B5
+            Range in A1:B5 format
         """
         start_cell = ExcelRange.cell_to_a1(start_row, start_col)
         end_cell = ExcelRange.cell_to_a1(end_row, end_col)
@@ -273,14 +270,14 @@ class ExcelRange:
 
     @staticmethod
     def parse_range_with_sheet(range_str: str) -> Tuple[Optional[str], int, int, int, int]:
-        """Convierte un rango que puede incluir hoja a tupla ``(sheet, row1, col1, row2, col2)``.
+        """Convert a range that may include a sheet to a tuple ``(sheet, row1, col1, row2, col2)``.
 
         Args:
-            range_str: Cadena de rango, posiblemente con prefijo de hoja ``Hoja!A1:B2``.
+            range_str: Range string, possibly with sheet prefix ``Sheet!A1:B2``.
 
         Returns:
-            Tupla ``(sheet, start_row, start_col, end_row, end_col)`` donde ``sheet``
-            es ``None`` si no se especificó hoja.
+            Tuple ``(sheet, start_row, start_col, end_row, end_col)`` where ``sheet``
+            is ``None`` if no sheet was specified.
         """
         if not range_str or not isinstance(range_str, str):
             raise ValueError(f"Rango inválido: {range_str}")
@@ -362,14 +359,14 @@ def get_sheet(wb, sheet_name_or_index) -> Any:
     Obtiene una hoja de Excel por nombre o índice.
     
     Args:
-        wb: Objeto workbook de openpyxl
+        wb: openpyxl Workbook object
         sheet_name_or_index: Nombre o índice de la hoja
         
     Returns:
         Objeto worksheet
         
     Raises:
-        SheetNotFoundError: Si la hoja no existe
+        SheetNotFoundError: If the sheet does not exist
     """
     if wb is None:
         raise ExcelMCPError("El workbook no puede ser None")
@@ -560,23 +557,23 @@ def _range_has_blank(ws: Any, min_row: int, min_col: int, max_row: int, max_col:
     return False
 
 # ----------------------------------------
-# FUNCIONES BASE (reimplementadas de los módulos originales)
+# BASE FUNCTIONS (reimplemented from the original modules)
 # ----------------------------------------
 
-# 1. Gestión de Workbooks (de workbook_manager_mcp.py)
+# 1. Workbook management (from workbook_manager_mcp.py)
 def create_workbook(filename: str, overwrite: bool = False) -> Any:
     """
-    Crea un nuevo fichero Excel vacío.
+    Create a new empty Excel file.
     
     Args:
-        filename (str): Ruta y nombre del archivo a crear.
-        overwrite (bool, opcional): Si es True, sobreescribe archivo existente.
+        filename (str): Path and filename to create.
+        overwrite (bool, optional): Overwrite existing file if True.
         
     Returns:
-        Objeto Workbook.
+        Workbook object.
         
     Raises:
-        FileExistsError: Si el archivo existe y overwrite es False.
+        FileExistsError: If the file exists and overwrite is False.
     """
     if os.path.exists(filename) and not overwrite:
         raise FileExistsError(f"El archivo '{filename}' ya existe. Use overwrite=True para sobreescribir.")
@@ -588,16 +585,16 @@ def create_workbook(filename: str, overwrite: bool = False) -> Any:
 
 def open_workbook(filename: str) -> Any:
     """
-    Abre un fichero Excel existente.
+    Open an existing Excel file.
     
     Args:
-        filename (str): Ruta del archivo.
+        filename (str): Path to the file.
         
     Returns:
-        Objeto Workbook.
+        Workbook object.
         
     Raises:
-        FileNotFoundError: Si el archivo no existe.
+        FileNotFoundError: If the file does not exist.
     """
     if not os.path.exists(filename):
         raise FileNotFoundError(f"El archivo '{filename}' no existe.")
@@ -611,17 +608,17 @@ def open_workbook(filename: str) -> Any:
 
 def save_workbook(wb: Any, filename: Optional[str] = None) -> str:
     """
-    Guarda el Workbook en disco.
+    Save a workbook to disk.
     
     Args:
-        wb: Objeto Workbook.
-        filename (str, opcional): Si se indica, guarda con otro nombre.
+        wb: Workbook object.
+        filename (str, optional): Save using a different name if provided.
         
     Returns:
-        Ruta del fichero guardado.
+        Path to the saved file.
         
     Raises:
-        ExcelMCPError: Si hay error al guardar.
+        ExcelMCPError: If there is an error while saving.
     """
     if not wb:
         raise ExcelMCPError("El workbook no puede ser None")
@@ -641,13 +638,13 @@ def save_workbook(wb: Any, filename: Optional[str] = None) -> str:
 
 def close_workbook(wb: Any) -> None:
     """
-    Cierra el Workbook en memoria.
+    Close the workbook in memory.
     
     Args:
-        wb: Objeto Workbook.
+        wb: Workbook object.
         
     Returns:
-        Ninguno.
+        None.
     """
     if not wb:
         return
@@ -662,13 +659,13 @@ def close_workbook(wb: Any) -> None:
 
 def list_sheets(wb: Any) -> List[str]:
     """
-    Devuelve lista de nombres de hojas.
+    Return the list of sheet names.
     
     Args:
-        wb: Objeto Workbook.
+        wb: Workbook object.
         
     Returns:
-        List[str]: Lista de nombres de hojas.
+        List[str]: List of sheet names.
     """
     if not wb:
         raise ExcelMCPError("El workbook no puede ser None")
@@ -686,18 +683,18 @@ def list_sheets(wb: Any) -> List[str]:
 
 def add_sheet(wb: Any, sheet_name: str, index: Optional[int] = None) -> Any:
     """
-    Añade una nueva hoja vacía.
+    Add a new empty sheet.
     
     Args:
-        wb: Objeto Workbook.
-        sheet_name (str): Nombre de la hoja.
-        index (int, opcional): Posición en pestañas.
+        wb: Workbook object.
+        sheet_name (str): Sheet name.
+        index (int, opcional): Tab position.
         
     Returns:
-        Hoja creada.
+        Created sheet.
         
     Raises:
-        SheetExistsError: Si ya existe una hoja con ese nombre.
+        SheetExistsError: If a sheet with that name already exists.
     """
     if not wb:
         raise ExcelMCPError("El workbook no puede ser None")
@@ -716,14 +713,14 @@ def add_sheet(wb: Any, sheet_name: str, index: Optional[int] = None) -> Any:
 
 def delete_sheet(wb: Any, sheet_name: str) -> None:
     """
-    Elimina la hoja indicada.
+    Delete the given sheet.
     
     Args:
-        wb: Objeto Workbook.
-        sheet_name (str): Nombre de la hoja a eliminar.
+        wb: Workbook object.
+        sheet_name (str): Name of the sheet to remove.
         
     Raises:
-        SheetNotFoundError: Si la hoja no existe.
+        SheetNotFoundError: If the sheet does not exist.
     """
     if not wb:
         raise ExcelMCPError("El workbook no puede ser None")
@@ -741,16 +738,16 @@ def delete_sheet(wb: Any, sheet_name: str) -> None:
 
 def rename_sheet(wb: Any, old_name: str, new_name: str) -> None:
     """
-    Renombra una hoja.
+    Rename a worksheet.
     
     Args:
-        wb: Objeto Workbook.
-        old_name (str): Nombre actual de la hoja.
-        new_name (str): Nuevo nombre para la hoja.
+        wb: Workbook object.
+        old_name (str): Current sheet name.
+        new_name (str): New sheet name.
         
     Raises:
-        SheetNotFoundError: Si la hoja original no existe.
-        SheetExistsError: Si ya existe una hoja con el nuevo nombre.
+        SheetNotFoundError: If the original sheet does not exist.
+        SheetExistsError: If a sheet with the new name already exists.
     """
     if not wb:
         raise ExcelMCPError("El workbook no puede ser None")
@@ -774,20 +771,20 @@ def rename_sheet(wb: Any, old_name: str, new_name: str) -> None:
 def read_sheet_data(wb: Any, sheet_name: str, range_str: Optional[str] = None, 
                    formulas: bool = False) -> List[List[Any]]:
     """
-    Lee valores y, opcionalmente, fórmulas de una hoja de Excel.
+    Read values and optionally formulas from a worksheet.
     
     Args:
-        wb: Objeto workbook de openpyxl
-        sheet_name: Nombre de la hoja
-        range_str: Rango en formato A1:B5, o None para toda la hoja
-        formulas: Si es True, devuelve fórmulas en lugar de valores calculados
+        wb: openpyxl Workbook object
+        sheet_name: Sheet name
+        range_str: Range in A1:B5 format or None for the whole sheet
+        formulas: If True, return formulas instead of calculated values
     
     Returns:
-        Lista de listas con los valores o fórmulas de las celdas
+        List of lists with the cell values or formulas
         
     Raises:
-        SheetNotFoundError: Si la hoja no existe
-        RangeError: Si el rango es inválido
+        SheetNotFoundError: If the sheet does not exist
+        RangeError: If the range is invalid
     """
     # Obtener la hoja
     ws = get_sheet(wb, sheet_name)
@@ -832,14 +829,14 @@ def read_sheet_data(wb: Any, sheet_name: str, range_str: Optional[str] = None,
 
 def list_tables(wb: Any, sheet_name: str) -> List[Dict[str, Any]]:
     """
-    Lista todas las tablas definidas en una hoja de Excel.
+    List all tables defined in a worksheet.
     
     Args:
-        wb: Objeto workbook de openpyxl
-        sheet_name: Nombre de la hoja
+        wb: openpyxl Workbook object
+        sheet_name: Sheet name
         
     Returns:
-        Lista de diccionarios con información de las tablas
+        List of dictionaries with table information
         
     Raises:
         SheetNotFoundError: Si la hoja no existe
@@ -871,7 +868,7 @@ def get_table_data(wb: Any, sheet_name: str, table_name: str) -> List[Dict[str, 
     Obtiene los datos de una tabla específica en formato de registros.
     
     Args:
-        wb: Objeto workbook de openpyxl
+        wb: openpyxl Workbook object
         sheet_name: Nombre de la hoja
         table_name: Nombre de la tabla
         
@@ -925,7 +922,7 @@ def list_charts(wb: Any, sheet_name: str) -> List[Dict[str, Any]]:
     Lista todos los gráficos en una hoja de Excel.
     
     Args:
-        wb: Objeto workbook de openpyxl
+        wb: openpyxl Workbook object
         sheet_name: Nombre de la hoja
         
     Returns:
@@ -1588,7 +1585,7 @@ def add_pivot_table(wb: Any, source_sheet: str, source_range: str, target_sheet:
     Crea una tabla dinámica.
     
     Args:
-        wb: Objeto workbook de openpyxl
+        wb: openpyxl Workbook object
         source_sheet (str): Hoja con datos fuente
         source_range (str): Rango de datos fuente (A1:E10)
         target_sheet (str): Hoja donde crear la tabla dinámica
@@ -1680,7 +1677,7 @@ def create_sheet_with_data(wb: Any, sheet_name: str, data: List[List[Any]],
 
     
     Args:
-        wb: Objeto workbook de openpyxl
+        wb: openpyxl Workbook object
         sheet_name (str): Nombre para la nueva hoja
         data (List[List]): Datos a escribir
         index (int, opcional): Posición de la hoja en el libro
@@ -1718,7 +1715,7 @@ def create_formatted_table(wb: Any, sheet_name: str, start_cell: str, data: List
 
     
     Args:
-        wb: Objeto workbook de openpyxl
+        wb: openpyxl Workbook object
         sheet_name (str): Nombre de la hoja donde crear la tabla
         start_cell (str): Celda inicial para los datos (ej. "A1")
         data (List[List]): Datos para la tabla, incluyendo encabezados
@@ -2042,7 +2039,7 @@ def create_report(wb: Any, data: Dict[str, List[List[Any]]], tables: Optional[Di
     el archivo.
 
     Args:
-        wb: Objeto workbook de openpyxl
+        wb: openpyxl Workbook object
         data: Diccionario con datos por hoja: {"Hoja1": [[datos]], "Hoja2": [[datos]]}
         tables: Diccionario de configuración de tablas:
             {"TablaVentas": {"sheet": "Ventas", "range": "A1:B10", "style": "TableStyleMedium9"}}
@@ -2194,7 +2191,7 @@ def create_dashboard(wb: Any, dashboard_config: Dict[str, Any],
     archivo.
 
     Args:
-        wb: Objeto workbook de openpyxl
+        wb: openpyxl Workbook object
         dashboard_config: Diccionario con configuración completa del dashboard
             {
                 "title": "Dashboard de Ventas",
@@ -2431,7 +2428,7 @@ def apply_excel_template(wb: Any, template_name: str, data: Dict[str, Any]) -> D
     
     Args:
 
-        wb: Objeto workbook de openpyxl
+        wb: openpyxl Workbook object
         template_name (str): Nombre de la plantilla a aplicar (ej. "informe_ventas", "dashboard")
         data: Diccionario con datos específicos para la plantilla
         
@@ -2781,7 +2778,7 @@ def update_report(wb: Any, report_config: Dict[str, Any],
 
     
     Args:
-        wb: Objeto workbook de openpyxl
+        wb: openpyxl Workbook object
         report_config: Configuración del informe a actualizar
             {
                 "data_updates": {
@@ -2965,7 +2962,7 @@ def import_data(wb: Any, import_config: Dict[str, Any]) -> Dict[str, Any]:
     Importa datos de distintas fuentes a Excel.
     
     Args:
-        wb: Objeto workbook de openpyxl
+        wb: openpyxl Workbook object
         import_config: Configuración de la importación
             {
                 "source": "csv", // csv, json, pandas, etc.
@@ -3113,7 +3110,7 @@ def export_data(wb: Any, export_config: Dict[str, Any]) -> Dict[str, Any]:
     Exporta datos de Excel a distintos formatos.
     
     Args:
-        wb: Objeto workbook de openpyxl
+        wb: openpyxl Workbook object
         export_config: Configuración de la exportación
             {
                 "format": "csv", // csv, json, pdf, html, etc.
