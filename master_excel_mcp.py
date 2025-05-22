@@ -50,6 +50,7 @@ import tempfile
 import time
 from pathlib import Path
 from typing import List, Dict, Union, Optional, Tuple, Any, Callable
+import math
 
 # Configuración de logging
 logger = logging.getLogger("excel_mcp_master")
@@ -537,6 +538,27 @@ def determine_orientation(ws: Any, min_row: int, min_col: int, max_row: int, max
     # Desempate por forma del rango
     return (max_row - min_row) >= (max_col - min_col)
 
+def _trim_range_to_data(ws: Any, min_row: int, min_col: int, max_row: int, max_col: int) -> Tuple[int, int, int, int]:
+    """Elimina filas y columnas vacías al final de un rango."""
+    while max_row >= min_row:
+        if all(ws.cell(row=max_row, column=c).value in (None, "") for c in range(min_col, max_col + 1)):
+            max_row -= 1
+        else:
+            break
+    while max_col >= min_col:
+        if all(ws.cell(row=r, column=max_col).value in (None, "") for r in range(min_row, max_row + 1)):
+            max_col -= 1
+        else:
+            break
+    return min_row, min_col, max_row, max_col
+
+def _range_has_blank(ws: Any, min_row: int, min_col: int, max_row: int, max_col: int) -> bool:
+    for r in range(min_row, max_row + 1):
+        for c in range(min_col, max_col + 1):
+            if ws.cell(row=r, column=c).value in (None, ""):
+                return True
+    return False
+
 # ----------------------------------------
 # FUNCIONES BASE (reimplementadas de los módulos originales)
 # ----------------------------------------
@@ -979,24 +1001,44 @@ def write_sheet_data(ws: Any, start_cell: str, data: List[List[Any]]) -> None:
     try:
         # Parsear la celda inicial para obtener fila y columna base
         start_row, start_col = ExcelRange.parse_cell_ref(start_cell)
-        
+
         # Escribir los datos
         for i, row_data in enumerate(data):
             if row_data is None:
                 continue
-            
+
             if not isinstance(row_data, list):
                 # Si no es una lista, tratar como valor único
                 row_data = [row_data]
-                
+
             for j, value in enumerate(row_data):
                 # Calcular coordenadas de celda (base 1 para openpyxl)
                 row = start_row + i + 1
                 col = start_col + j + 1
-                
+
                 # Escribir el valor
                 cell = ws.cell(row=row, column=col)
                 cell.value = value
+
+        # ----------------------------------------------------
+        # Ajuste automático de columnas y filas del rango escrito
+        # ----------------------------------------------------
+        end_row = start_row + len(data) - 1
+        max_len_row = 0
+        for row_data in data:
+            if row_data is None:
+                continue
+            if isinstance(row_data, list):
+                max_len_row = max(max_len_row, len(row_data))
+            else:
+                max_len_row = max(max_len_row, 1)
+        end_col = start_col + max_len_row - 1
+        cell_range = ExcelRange.range_to_a1(start_row, start_col, end_row, end_col)
+        try:
+            autofit_table(ws, cell_range)
+        except Exception:
+            # No interrumpir escritura por un fallo de ajuste
+            pass
     
     except ValueError as e:
         raise CellReferenceError(f"Referencia de celda inválida '{start_cell}': {e}")
@@ -1057,21 +1099,22 @@ def update_cell(ws: Any, cell: str, value_or_formula: Any) -> None:
         # ----------------------------------------------
         if isinstance(value_or_formula, str):
             text = value_or_formula
-            if len(text) > 40 or "\n" in text:
+            lines = text.splitlines()
+            max_len = max(len(line) for line in lines)
+
+            column_letter = cell_obj.column_letter
+            current_w = ws.column_dimensions[column_letter].width or 8.43
+            desired_w = min(max_len + 2, 80)
+            if desired_w > current_w:
+                ws.column_dimensions[column_letter].width = desired_w
+
+            if len(lines) > 1 or max_len > current_w:
                 cell_obj.alignment = Alignment(wrap_text=True)
-                column_letter = cell_obj.column_letter
-                # Calcular ancho proporcional al texto más largo
-                max_len = max(len(line) for line in text.splitlines())
-                ws.column_dimensions[column_letter].width = max(
-                    ws.column_dimensions[column_letter].width or 0,
-                    min(max_len + 2, 80),
-                )
-                # Ajustar altura de la fila
-                lines = max(len(text.splitlines()), (len(text) // 40) + 1)
-                ws.row_dimensions[cell_obj.row].height = max(
-                    ws.row_dimensions[cell_obj.row].height or 15,
-                    lines * 15,
-                )
+                est_lines = max(len(lines), math.ceil(max_len / max(desired_w, 1)))
+                current_h = ws.row_dimensions[cell_obj.row].height or 15
+                desired_h = est_lines * 15
+                if desired_h > current_h:
+                    ws.row_dimensions[cell_obj.row].height = desired_h
 
 
     except KeyError:
@@ -1094,14 +1137,13 @@ def autofit_table(ws: Any, cell_range: str) -> None:
             if value is None:
                 continue
             text = str(value)
-            longest = max(len(line) for line in text.splitlines())
+            lines = text.splitlines()
+            longest = max(len(line) for line in lines)
             col_widths[col] = max(col_widths.get(col, 0), longest)
-            lines = len(text.splitlines())
-            if longest > 40:
-                lines = max(lines, (longest // 40) + 1)
-            if lines > 1 or "\n" in text:
+            est_lines = max(len(lines), math.ceil(longest / 40))
+            if est_lines > 1:
                 cell.alignment = Alignment(wrap_text=True)
-            max_lines = max(max_lines, lines)
+            max_lines = max(max_lines, est_lines)
         if max_lines > 1:
             row_heights[row] = max_lines * 15
 
@@ -1446,37 +1488,40 @@ def add_chart(
             min_col = sc + 1
             max_row = er + 1
             max_col = ec + 1
-            
+
+            # Recortar filas o columnas vacías al final
+            min_row, min_col, max_row, max_col = _trim_range_to_data(data_ws, min_row, min_col, max_row, max_col)
+            if max_row < min_row or max_col < min_col:
+                raise ChartError("El rango indicado no contiene datos")
+
             # Determinar orientación analizando el contenido del rango
             is_column_oriented = determine_orientation(data_ws, min_row, min_col, max_row, max_col)
             
             # Para gráficos que necesitan categorías (la mayoría excepto scatter)
             if chart_type.lower() != 'scatter':
                 if is_column_oriented:
-                    # Datos organizados en columnas
-                    # Excluir la fila 1 de las categorías para no usar la cabecera en el eje X
-                    categories = Reference(data_ws, min_row=min_row+1, max_row=max_row, min_col=min_col, max_col=min_col)
-                    data = Reference(data_ws, min_row=min_row, max_row=max_row, min_col=min_col+1, max_col=max_col)
-                    # En Python 2 openpyxl puede no soportar el parámetro titles_from_data
+                    if _range_has_blank(data_ws, min_row + 1, min_col + 1, max_row, max_col):
+                        raise ChartError("El rango de datos contiene celdas vacías")
+                    categories = Reference(data_ws, min_row=min_row + 1, max_row=max_row, min_col=min_col, max_col=min_col)
+                    data = Reference(data_ws, min_row=min_row, max_row=max_row, min_col=min_col + 1, max_col=max_col)
                     try:
                         chart.add_data(data, titles_from_data=True)
                     except TypeError:
-                        # Fallback para versiones antiguas de openpyxl
                         chart.add_data(data)
                     chart.set_categories(categories)
                 else:
-                    # Datos organizados en filas
+                    if _range_has_blank(data_ws, min_row + 1, min_col, max_row, max_col):
+                        raise ChartError("El rango de datos contiene celdas vacías")
                     categories = Reference(data_ws, min_row=min_row, max_row=min_row, min_col=min_col, max_col=max_col)
-                    data = Reference(data_ws, min_row=min_row+1, max_row=max_row, min_col=min_col, max_col=max_col)
-                    # En Python 2 openpyxl puede no soportar el parámetro titles_from_data
+                    data = Reference(data_ws, min_row=min_row + 1, max_row=max_row, min_col=min_col, max_col=max_col)
                     try:
                         chart.add_data(data, titles_from_data=True)
                     except TypeError:
-                        # Fallback para versiones antiguas de openpyxl
                         chart.add_data(data)
                     chart.set_categories(categories)
             else:
-                # Para gráficos de dispersión
+                if _range_has_blank(data_ws, min_row, min_col, max_row, max_col):
+                    raise ChartError("El rango de datos contiene celdas vacías")
                 data_ref = Reference(data_ws, min_row=min_row, min_col=min_col, max_row=max_row, max_col=max_col)
                 chart.add_data(data_ref)
         
