@@ -4061,6 +4061,202 @@ def export_single_visible_sheet_pdf(excel_file: str, output_pdf: Optional[str] =
             "message": f"Error al exportar a PDF: {e}",
         }
 
+def export_sheets_to_pdf(
+    excel_file: str,
+    sheets: Optional[Union[str, List[str]]] = None,
+    output_dir: Optional[str] = None,
+    single_file: bool = False,
+) -> Dict[str, Any]:
+    """Exporta una o varias hojas de un libro de Excel a PDF.
+
+    Parameters
+    ----------
+    excel_file : str
+        Ruta al archivo Excel a exportar.
+    sheets : Union[str, List[str]], optional
+        Nombre de la hoja o lista de hojas a exportar. Si ``None`` se exportan
+        todas las hojas del libro (una por una).
+    output_dir : str, optional
+        Carpeta donde guardar los PDF. Por defecto se usa la carpeta del
+        archivo original.
+    single_file : bool, optional
+        Si es ``True`` y se especifican varias hojas se intentará crear un único
+        PDF con todas ellas (si el sistema lo permite). Si es ``False`` se
+        generará un PDF por cada hoja.
+
+    Returns
+    -------
+    dict
+        Resultado de la operación con la lista de PDFs generados. Si alguna hoja
+        no existe se incluye un aviso en ``warnings``.
+    """
+
+    try:
+        import shutil
+        import subprocess
+
+        if not os.path.exists(excel_file):
+            raise FileNotFoundError(f"El archivo Excel no existe: {excel_file}")
+
+        wb = openpyxl.load_workbook(excel_file, data_only=True)
+        all_sheets = wb.sheetnames
+        wb.close()
+
+        if sheets is None:
+            target_sheets = all_sheets
+        elif isinstance(sheets, str):
+            target_sheets = [sheets]
+        else:
+            target_sheets = list(sheets)
+
+        warnings = []
+        valid_sheets = []
+        for s in target_sheets:
+            if s in all_sheets:
+                valid_sheets.append(s)
+            else:
+                warnings.append(f"La hoja '{s}' no existe")
+
+        if not valid_sheets:
+            msg = "No se encontraron hojas válidas para exportar"
+            logger.warning(msg)
+            return {
+                "success": False,
+                "file_path": excel_file,
+                "warnings": warnings,
+                "message": msg,
+            }
+
+        if output_dir is None:
+            output_dir = os.path.dirname(os.path.abspath(excel_file))
+
+        pdf_files: List[str] = []
+
+        # Intentar usar win32com si está disponible
+        try:
+            import win32com.client
+
+            excel = win32com.client.Dispatch("Excel.Application")
+            excel.Visible = False
+            workbook = excel.Workbooks.Open(os.path.abspath(excel_file))
+
+            if single_file and len(valid_sheets) > 1:
+                workbook.Worksheets(valid_sheets).Select()
+                output_pdf = os.path.join(
+                    output_dir, Path(excel_file).stem + ".pdf"
+                )
+                workbook.ActiveSheet.ExportAsFixedFormat(0, output_pdf)
+                pdf_files.append(output_pdf)
+            else:
+                for s in valid_sheets:
+                    ws = workbook.Worksheets(s)
+                    output_pdf = os.path.join(
+                        output_dir, f"{Path(excel_file).stem}_{s}.pdf"
+                    )
+                    ws.ExportAsFixedFormat(0, output_pdf)
+                    pdf_files.append(output_pdf)
+
+            workbook.Close(False)
+            excel.Quit()
+
+            msg = "Exportación a PDF realizada correctamente"
+            logger.info(msg)
+            return {
+                "success": True,
+                "file_path": excel_file,
+                "pdf_files": pdf_files,
+                "warnings": warnings,
+                "message": msg,
+            }
+        except ImportError:
+            logger.info("win32com no disponible, se intentará usar LibreOffice")
+        except Exception as e:
+            logger.error(f"Error al exportar con win32com: {e}")
+
+        # Fallback a LibreOffice
+        soffice = shutil.which("soffice") or shutil.which("libreoffice")
+        if soffice:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                if single_file and len(valid_sheets) > 1:
+                    tmp_xlsx = os.path.join(tmpdir, "tmp.xlsx")
+                    wb = openpyxl.load_workbook(excel_file)
+                    for sheet in wb.sheetnames:
+                        wb[sheet].sheet_state = (
+                            "visible" if sheet in valid_sheets else "hidden"
+                        )
+                    wb.save(tmp_xlsx)
+                    wb.close()
+                    cmd = [
+                        soffice,
+                        "--headless",
+                        "--convert-to",
+                        "pdf",
+                        os.path.abspath(tmp_xlsx),
+                        "--outdir",
+                        tmpdir,
+                    ]
+                    subprocess.run(cmd, check=True)
+                    generated = os.path.join(tmpdir, "tmp.pdf")
+                    final = os.path.join(
+                        output_dir, Path(excel_file).stem + ".pdf"
+                    )
+                    shutil.move(generated, final)
+                    pdf_files.append(final)
+                else:
+                    for s in valid_sheets:
+                        tmp_xlsx = os.path.join(tmpdir, f"{s}.xlsx")
+                        wb = openpyxl.load_workbook(excel_file)
+                        for sheet in wb.sheetnames:
+                            wb[sheet].sheet_state = (
+                                "visible" if sheet == s else "hidden"
+                            )
+                        wb.save(tmp_xlsx)
+                        wb.close()
+                        cmd = [
+                            soffice,
+                            "--headless",
+                            "--convert-to",
+                            "pdf",
+                            os.path.abspath(tmp_xlsx),
+                            "--outdir",
+                            tmpdir,
+                        ]
+                        subprocess.run(cmd, check=True)
+                        generated = os.path.join(tmpdir, f"{s}.pdf")
+                        final = os.path.join(
+                            output_dir, f"{Path(excel_file).stem}_{s}.pdf"
+                        )
+                        shutil.move(generated, final)
+                        pdf_files.append(final)
+
+            msg = "Exportación a PDF realizada correctamente"
+            logger.info(msg)
+            return {
+                "success": True,
+                "file_path": excel_file,
+                "pdf_files": pdf_files,
+                "warnings": warnings,
+                "message": msg,
+            }
+
+        msg = "No se encontró un método disponible para exportar a PDF."
+        logger.error(msg)
+        return {
+            "success": False,
+            "file_path": excel_file,
+            "warnings": warnings,
+            "message": msg,
+        }
+
+    except Exception as e:
+        logger.error(f"Error al exportar a PDF: {e}")
+        return {
+            "success": False,
+            "file_path": excel_file,
+            "error": str(e),
+            "message": f"Error al exportar a PDF: {e}",
+        }
+
 # Crear el servidor MCP como variable global
 mcp = None
 if HAS_MCP:
@@ -5119,6 +5315,17 @@ if HAS_MCP:
     def export_single_sheet_pdf_tool(excel_file, output_pdf=None):
         """Exporta un archivo Excel a PDF si solo tiene una hoja visible."""
         return export_single_visible_sheet_pdf(excel_file, output_pdf)
+
+    @mcp.tool(description="Exporta una o varias hojas a PDF")
+    def export_sheets_pdf_tool(excel_file, sheets=None, output_dir=None, single_file=False):
+        """Exporta las hojas indicadas de un libro Excel a PDF.
+
+        ``sheets`` puede ser un nombre de hoja o una lista. Si es ``None`` se
+        exportará cada hoja existente de forma individual. Si ``single_file`` es
+        ``True`` y se especifican varias hojas, se intentará generar un único
+        PDF con todas ellas.
+        """
+        return export_sheets_to_pdf(excel_file, sheets, output_dir, single_file)
 
 if __name__ == "__main__":
     logger.info("Master Excel MCP - Ejemplo de uso")
