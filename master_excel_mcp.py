@@ -2998,8 +2998,8 @@ def import_data(wb: Any, import_config: Dict[str, Any]) -> Dict[str, Any]:
             result["sheet"] = sheet_name
             result["start_cell"] = start_cell
         except Exception as e:
-            logger.error(f"Error al importar CSV: {e}")
-            result["error"] = f"Error al importar CSV: {e}"
+            logger.error(f"Error importing CSV: {e}")
+            result["error"] = f"Error importing CSV: {e}"
     
     elif source_type == "json":
         try:
@@ -3008,30 +3008,30 @@ def import_data(wb: Any, import_config: Dict[str, Any]) -> Dict[str, Any]:
             with open(source_path, 'r', encoding='utf-8') as f:
                 json_data = json.load(f)
             
-            # Convertir JSON a lista de listas
+            # Convert JSON to list of lists
             data = []
             
             if isinstance(json_data, list):
-                # Es una lista de objetos
+                # It is a list of objects
                 if json_data and isinstance(json_data[0], dict):
-                    # Obtener encabezados (claves del primer objeto)
+                    # Get headers (claves del primer objeto)
                     headers = list(json_data[0].keys())
                     data.append(headers)
                     
-                    # Añadir filas de datos
+                    # Add data rows
                     for item in json_data:
                         row = [item.get(header, "") for header in headers]
                         data.append(row)
                 else:
-                    # Es una lista simple
+                    # It is a simple list
                     for item in json_data:
                         data.append([item])
             elif isinstance(json_data, dict):
-                # Es un diccionario
+                # It is a dictionary
                 for key, value in json_data.items():
                     data.append([key, value])
             
-            # Escribir los datos
+            # Write the data
             write_sheet_data(ws, start_cell, data)
             
             result["imported_rows"] = len(data)
@@ -3039,14 +3039,14 @@ def import_data(wb: Any, import_config: Dict[str, Any]) -> Dict[str, Any]:
             result["sheet"] = sheet_name
             result["start_cell"] = start_cell
         except Exception as e:
-            logger.error(f"Error al importar JSON: {e}")
-            result["error"] = f"Error al importar JSON: {e}"
+            logger.error(f"Error importing JSON: {e}")
+            result["error"] = f"Error importing JSON: {e}"
     
     elif source_type == "pandas":
         try:
             import pandas as pd
             
-            # Opciones para pandas
+            # Options for pandas
             file_ext = os.path.splitext(source_path)[1].lower()
             
             if file_ext == '.csv':
@@ -3056,13 +3056,13 @@ def import_data(wb: Any, import_config: Dict[str, Any]) -> Dict[str, Any]:
             elif file_ext == '.json':
                 df = pd.read_json(source_path)
             else:
-                raise ValueError(f"Formato de archivo no soportado: {file_ext}")
+                raise ValueError(f"Unsupported file format: {file_ext}")
             
-            # Convertir DataFrame a lista de listas
+            # Convert DataFrame to list of lists
             data = [df.columns.tolist()]  # Encabezados
             data.extend(df.values.tolist())  # Datos
             
-            # Escribir los datos
+            # Write the data
             write_sheet_data(ws, start_cell, data)
             
             result["imported_rows"] = len(data)
@@ -3070,12 +3070,12 @@ def import_data(wb: Any, import_config: Dict[str, Any]) -> Dict[str, Any]:
             result["sheet"] = sheet_name
             result["start_cell"] = start_cell
         except Exception as e:
-            logger.error(f"Error al importar con pandas: {e}")
-            result["error"] = f"Error al importar con pandas: {e}"
+            logger.error(f"Error importing with pandas: {e}")
+            result["error"] = f"Error importing with pandas: {e}"
     
     else:
-        logger.warning(f"Tipo de fuente no soportado: {source_type}")
-        result["error"] = f"Tipo de fuente no soportado: {source_type}"
+        logger.warning(f"Unsupported source type: {source_type}")
+        result["error"] = f"Unsupported source type: {source_type}"
     
     return result
 
@@ -3115,8 +3115,8 @@ def export_data(wb: Any, export_config: Dict[str, Any]) -> Dict[str, Any]:
     options = export_config.get("options", {})
     
     if not sheet_name:
-        logger.warning("No se especificó una hoja para exportar datos.")
-        result["error"] = "No se especificó una hoja"
+        logger.warning("No sheet specified para exportar datos.")
+        result["error"] = "No sheet specified"
         return result
         
     if sheet_name not in list_sheets(wb):
@@ -3128,16 +3128,16 @@ def export_data(wb: Any, export_config: Dict[str, Any]) -> Dict[str, Any]:
     data = read_sheet_data(wb, sheet_name, range_str)
     
     if not data:
-        logger.warning(f"No se encontraron datos en el rango {range_str} de la hoja {sheet_name}")
+        logger.warning(f"No data found in range {range_str} de la hoja {sheet_name}")
         return []
     
-    # Filtrar los datos según los criterios
+    # Filter the data based on the criteria
     result = []
     headers = data[0] if data else []
     
-    # Si tenemos datos con encabezados
+    # If there is data with headers
     if len(data) > 1:
-        # Convertir a formato de registros (lista de diccionarios)
+        # Convert to record format (list of dictionaries)
         records = []
         for row in data[1:]:
             record = {}
@@ -3148,19 +3148,19 @@ def export_data(wb: Any, export_config: Dict[str, Any]) -> Dict[str, Any]:
                     record[header] = None
             records.append(record)
         
-        # Aplicar filtros si se proporcionan
+        # Apply filters if provided
         if filters:
             filtered_records = []
             for record in records:
                 include = True
                 for field, value in filters.items():
                     if field in record:
-                        # Si el valor del filtro es una lista, verificar si el valor está en la lista
+                        # If the filter value is a list, check if the value is in the list
                         if isinstance(value, list):
                             if record[field] not in value:
                                 include = False
                                 break
-                        # Si el valor del filtro es un diccionario, aplicar operadores
+                        # If the filter value is a dictionary, apply operators
                         elif isinstance(value, dict):
                             for op, op_value in value.items():
                                 if op == 'eq' and record[field] != op_value:
@@ -3178,7 +3178,7 @@ def export_data(wb: Any, export_config: Dict[str, Any]) -> Dict[str, Any]:
                                 elif op == 'contains' and (not isinstance(record[field], str) or op_value not in record[field]):
                                     include = False
                                     break
-                        # Si el valor del filtro es un valor simple, hacer una comparación de igualdad
+                        # If the filter value is a simple value, perform an equality comparison
                         elif record[field] != value:
                             include = False
                             break
@@ -3246,7 +3246,7 @@ def create_report_from_template(template_file, output_file, data_mappings, chart
         if data_mappings:
             for sheet_name, ranges in data_mappings.items():
                 if sheet_name not in wb.sheetnames:
-                    logger.warning(f"La hoja '{sheet_name}' no existe en la plantilla")
+                    logger.warning(f"Sheet '{sheet_name}' does not exist in the template")
                     continue
                 
                 ws = wb[sheet_name]
@@ -3257,51 +3257,51 @@ def create_report_from_template(template_file, output_file, data_mappings, chart
                     else:
                         start_cell = range_str.split(':')[0]
                     
-                    # Escribir los datos
+                    # Write the data
                     write_sheet_data(ws, start_cell, data)
         
-        # Aplicar mapeos de gráficos
+        # Apply chart mappings
         if chart_mappings:
             for sheet_name, charts in chart_mappings.items():
                 if sheet_name not in wb.sheetnames:
-                    logger.warning(f"La hoja '{sheet_name}' no existe en la plantilla")
+                    logger.warning(f"Sheet '{sheet_name}' does not exist in the template")
                     continue
                 
                 ws = wb[sheet_name]
                 existing_charts = list_charts(ws)
                 
                 for chart_id, chart_updates in charts.items():
-                    # Verificar si el chart_id es un índice o un nombre
+                    # Check if chart_id is an index or a name
                     chart_idx = None
                     if isinstance(chart_id, int) or (isinstance(chart_id, str) and chart_id.isdigit()):
                         chart_idx = int(chart_id)
                     else:
-                        # Buscar el chart por título
+                        # Look up the chart by title
                         for i, chart in enumerate(existing_charts):
                             if chart.get('title') == chart_id:
                                 chart_idx = i
                                 break
                     
                     if chart_idx is None or chart_idx >= len(existing_charts):
-                        logger.warning(f"No se encontró el gráfico '{chart_id}' en la hoja '{sheet_name}'")
+                        logger.warning(f"Chart not found '{chart_id}' en la hoja '{sheet_name}'")
                         continue
                     
-                    # Actualizar propiedades del gráfico
+                    # Update chart properties
                     chart = ws._charts[chart_idx][0]
                     
                     if 'title' in chart_updates:
                         chart.title = chart_updates['title']
                     
                     if 'data_range' in chart_updates:
-                        # La actualización del rango de datos es compleja y depende del tipo de gráfico
-                        # Por ahora, simplemente logueamos que esta funcionalidad no está implementada
-                        logger.warning("La actualización del rango de datos de gráficos no está implementada completamente")
+                        # Updating the data range is complex and depends on the chart type
+                        # For now just log that this feature is not implemented
+                        logger.warning("Chart data range update is not fully implemented")
         
         # Aplicar mapeos de formato
         if format_mappings:
             for sheet_name, ranges in format_mappings.items():
                 if sheet_name not in wb.sheetnames:
-                    logger.warning(f"La hoja '{sheet_name}' no existe en la plantilla")
+                    logger.warning(f"Sheet '{sheet_name}' does not exist in the template")
                     continue
                 
                 ws = wb[sheet_name]
@@ -3418,7 +3418,7 @@ def create_dynamic_dashboard(file_path, data, dashboard_config, overwrite=False)
             style = table_config.get("style", "TableStyleMedium9")
             
             if sheet_name not in wb.sheetnames:
-                logger.warning(f"La hoja '{sheet_name}' no existe para crear la tabla '{table_name}'")
+                logger.warning(f"Sheet '{sheet_name}' does not exist to create table '{table_name}'")
                 continue
             
             ws = wb[sheet_name]
@@ -3427,7 +3427,7 @@ def create_dynamic_dashboard(file_path, data, dashboard_config, overwrite=False)
             table_exists = False
             if hasattr(ws, 'tables') and table_name in ws.tables:
                 table_exists = True
-                logger.warning(f"La tabla '{table_name}' ya existe, se actualizará")
+                logger.warning(f"Table '{table_name}' already exists, it will be updated")
             
             if table_exists:
                 # Actualizar tabla existente
@@ -3440,13 +3440,13 @@ def create_dynamic_dashboard(file_path, data, dashboard_config, overwrite=False)
             if "formats" in table_config:
                 for cell_range, fmt in table_config["formats"].items():
                     if isinstance(fmt, str):
-                        # Es un formato numérico
+                        # Numeric format
                         apply_number_format(ws, cell_range, fmt)
                     elif isinstance(fmt, dict):
                         # Es un estilo
                         apply_style(ws, cell_range, fmt)
         
-        # Crear gráficos
+        # Create charts
         for chart_config in dashboard_config.get("charts", []):
             sheet_name = chart_config["sheet"]
             chart_type = chart_config["type"]
@@ -3456,16 +3456,16 @@ def create_dynamic_dashboard(file_path, data, dashboard_config, overwrite=False)
             style = chart_config.get("style")
             
             if sheet_name not in wb.sheetnames:
-                logger.warning(f"La hoja '{sheet_name}' no existe para crear el gráfico '{title}'")
+                logger.warning(f"Sheet '{sheet_name}' does not exist to create the chart '{title}'")
                 continue
             
-            # Crear gráfico
+            # Create chart
             chart_id, _ = add_chart(wb, sheet_name, chart_type, data_range, title, position, style)
         
-        # Configurar tamaños de columna para visualización óptima
+        # Set column widths for optimal display
         for sheet_name in wb.sheetnames:
             ws = wb[sheet_name]
-            # Establecer un ancho mínimo para columnas con fechas
+            # Set a minimum width for date columns
             for i in range(1, ws.max_column + 1):
                 column_letter = get_column_letter(i)
                 # Verificar si hay celdas con formato de fecha en la columna
@@ -3476,7 +3476,7 @@ def create_dynamic_dashboard(file_path, data, dashboard_config, overwrite=False)
                         break
                 
                 if date_format:
-                    # Establecer ancho mínimo para columnas con fechas
+                    # Set minimum width for date columns
                     ws.column_dimensions[column_letter].width = max(ws.column_dimensions[column_letter].width or 0, 10)
         
         # Guardar el archivo
@@ -3489,22 +3489,22 @@ def create_dynamic_dashboard(file_path, data, dashboard_config, overwrite=False)
         }
     
     except Exception as e:
-        logger.error(f"Error al crear dashboard: {e}")
+        logger.error(f"Error creating dashboard: {e}")
         return {
             "success": False,
             "error": str(e),
-            "message": f"Error al crear dashboard: {e}"
+            "message": f"Error creating dashboard: {e}"
         }
 
 def import_multi_source_data(excel_file, import_config, sheet_name=None, start_cell="A1", create_tables=False):
     """
-    Importa datos desde múltiples fuentes (CSV, JSON, SQL) a un archivo Excel en un solo paso.
-    
-    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+    Import data from multiple sources (CSV, JSON, SQL) into an Excel file in one step.
+
+    🔒 **Emojis must never be included in text written to cells, labels, titles or charts.**
 
     Args:
-        excel_file (str): Ruta al archivo Excel donde importar los datos
-        import_config (dict): Configuración de importación:
+        excel_file (str): Path to the Excel file where the data will be imported.
+        import_config (dict): Import configuration:
             {
                 "csv": [
                     {
@@ -3532,24 +3532,24 @@ def import_multi_source_data(excel_file, import_config, sheet_name=None, start_c
                     }
                 ]
             }
-        sheet_name (str, opcional): Nombre de hoja predeterminado si no se especifica en la configuración
-        start_cell (str, opcional): Celda inicial predeterminada si no se especifica en la configuración
-        create_tables (bool, opcional): Si es True, crea tablas Excel para cada conjunto de datos
+        sheet_name (str, optional): Default sheet name if not specified in the configuration
+        start_cell (str, optional): Default starting cell if not specified in the configuration
+        create_tables (bool, optional): If True, create Excel tables for each dataset
     
     Returns:
-        dict: Resultado de la operación
+        dict: Result of the operation
     """
     try:
         import csv
         import json
         
-        # Intentar importar pandas si está disponible (opcional)
+        # Try to import pandas if available (optional)
         try:
             import pandas as pd
             HAS_PANDAS = True
         except ImportError:
             HAS_PANDAS = False
-            logger.warning("Pandas no está disponible. Algunas funcionalidades estarán limitadas.")
+            logger.warning("Pandas is not available. Some features will be limited.")
         
         # Verificar si el archivo Excel existe, si no, crearlo
         if not os.path.exists(excel_file):
@@ -3582,12 +3582,12 @@ def import_multi_source_data(excel_file, import_config, sheet_name=None, start_c
             
             # Leer datos CSV
             if HAS_PANDAS:
-                # Usar pandas si está disponible
+                # Use pandas if available
                 df = pd.read_csv(csv_file, delimiter=delimiter, encoding=encoding)
                 data = [df.columns.tolist()]  # Encabezados
                 data.extend(df.values.tolist())  # Datos
             else:
-                # Usar csv estándar si pandas no está disponible
+                # Use standard csv if pandas is not available
                 data = []
                 with open(csv_file, 'r', encoding=encoding) as f:
                     reader = csv.reader(f, delimiter=delimiter)
@@ -3605,14 +3605,14 @@ def import_multi_source_data(excel_file, import_config, sheet_name=None, start_c
                 end_col = start_col + (len(data[0]) if data and len(data) > 0 else 0) - 1
                 table_range = ExcelRange.range_to_a1(start_row, start_col, end_row, end_col)
                 
-                # Crear un nombre único para la tabla
+                # Create a unique name for the table
                 table_name = f"Table_{csv_sheet}_{len(imported_data) + 1}"
                 table_name = table_name.replace(" ", "_")
                 
                 try:
                     add_table(ws, table_name, table_range, "TableStyleMedium9")
                 except Exception as table_error:
-                    logger.warning(f"No se pudo crear la tabla para {csv_file}: {table_error}")
+                    logger.warning(f"Could not create the table for {csv_file}: {table_error}")
             
             imported_data.append({
                 "source": "csv",
@@ -3661,7 +3661,7 @@ def import_multi_source_data(excel_file, import_config, sheet_name=None, start_c
                         row = [item.get(field, "") for field in headers]
                         data.append(row)
                     else:
-                        # Si el elemento no es un diccionario, añadirlo como una sola columna
+                        # If the item is not a dictionary, add it as a single column
                         data.append([item])
             else:
                 # Si es un solo objeto, usar sus claves y valores
@@ -3675,7 +3675,7 @@ def import_multi_source_data(excel_file, import_config, sheet_name=None, start_c
                         headers = list(json_data.keys())
                         data = [headers, list(json_data.values())]
                 else:
-                    # Si no es un diccionario ni una lista, usar una representación simple
+                    # If it is neither a dictionary nor a list, use a simple representation
                     data = [["Value"], [json_data]]
             
             # Escribir datos en la hoja
@@ -3689,14 +3689,14 @@ def import_multi_source_data(excel_file, import_config, sheet_name=None, start_c
                 end_col = start_col + (len(data[0]) if data and len(data) > 0 else 0) - 1
                 table_range = ExcelRange.range_to_a1(start_row, start_col, end_row, end_col)
                 
-                # Crear un nombre único para la tabla
+                # Create a unique name for the table
                 table_name = f"Table_{json_sheet}_{len(imported_data) + 1}"
                 table_name = table_name.replace(" ", "_")
                 
                 try:
                     add_table(ws, table_name, table_range, "TableStyleMedium9")
                 except Exception as table_error:
-                    logger.warning(f"No se pudo crear la tabla para {json_file}: {table_error}")
+                    logger.warning(f"Could not create the table for {json_file}: {table_error}")
             
             imported_data.append({
                 "source": "json",
@@ -3705,14 +3705,14 @@ def import_multi_source_data(excel_file, import_config, sheet_name=None, start_c
                 "rows": len(data)
             })
         
-        # Procesar consultas SQL (requiere conexión a base de datos)
+        # Process SQL queries (requires database connection)
         if "sql" in import_config and import_config["sql"]:
             try:
                 import pyodbc
                 HAS_PYODBC = True
             except ImportError:
                 HAS_PYODBC = False
-                logger.warning("pyodbc no está disponible. No se pueden importar datos SQL.")
+                logger.warning("pyodbc is not available. SQL data cannot be imported.")
             
             if HAS_PYODBC or HAS_PANDAS:
                 for sql_config in import_config.get("sql", []):
@@ -3735,7 +3735,7 @@ def import_multi_source_data(excel_file, import_config, sheet_name=None, start_c
                         data = []
                         
                         if HAS_PANDAS:
-                            # Usar pandas si está disponible
+                            # Use pandas if available
                             import urllib.parse
                             params = urllib.parse.quote_plus(connection_string)
                             connection_url = f"mssql+pyodbc:///?odbc_connect={params}"
@@ -3773,14 +3773,14 @@ def import_multi_source_data(excel_file, import_config, sheet_name=None, start_c
                             end_col = start_col + (len(data[0]) if data and len(data) > 0 else 0) - 1
                             table_range = ExcelRange.range_to_a1(start_row, start_col, end_row, end_col)
                             
-                            # Crear un nombre único para la tabla
+                            # Create a unique name for the table
                             table_name = f"Table_{sql_sheet}_{len(imported_data) + 1}"
                             table_name = table_name.replace(" ", "_")
                             
                             try:
                                 add_table(ws, table_name, table_range, "TableStyleMedium9")
                             except Exception as table_error:
-                                logger.warning(f"No se pudo crear la tabla para consulta SQL: {table_error}")
+                                logger.warning(f"Could not create the table for SQL query: {table_error}")
                         
                         imported_data.append({
                             "source": "sql",
@@ -3813,11 +3813,11 @@ def import_multi_source_data(excel_file, import_config, sheet_name=None, start_c
 
 def export_excel_data(excel_file, export_config):
     """
-    Exporta datos de Excel a múltiples formatos (CSV, JSON, PDF) en un solo paso.
+    Export Excel data to multiple formats (CSV, JSON, PDF) in one step.
     
     Args:
-        excel_file (str): Ruta al archivo Excel de origen
-        export_config (dict): Configuración de exportación:
+        excel_file (str): Path to the source Excel file
+        export_config (dict): Export configuration:
             {
                 "csv": [
                     {
@@ -3837,13 +3837,13 @@ def export_excel_data(excel_file, export_config):
                     }
                 ],
                 "pdf": {
-                    "output_file": "output.pdf",
-                    "sheets": ["Sheet1", "Sheet2"]  # o null para todas
+                      "output_file": "output.pdf",
+                      "sheets": ["Sheet1", "Sheet2"]  # or null for all
                 }
             }
     
     Returns:
-        dict: Resultado de la operación
+        dict: Result of the operation
     """
     try:
         import csv
@@ -3872,7 +3872,7 @@ def export_excel_data(excel_file, export_config):
             # Leer los datos del rango especificado
             data = read_sheet_data(wb, sheet_name, range_str)
             
-            # Escribir los datos en CSV
+            # Write the data en CSV
             with open(output_file, 'w', newline='', encoding=encoding) as csvfile:
                 writer = csv.writer(csvfile, delimiter=delimiter)
                 for row in data:
@@ -3903,7 +3903,7 @@ def export_excel_data(excel_file, export_config):
                 logger.warning(f"No hay datos para exportar en la hoja '{sheet_name}'")
                 continue
             
-            # Convertir datos a formato JSON según el tipo especificado
+            # Convert data to JSON format according to the specified type
             headers = data[0]
             json_data = None
             
@@ -3937,7 +3937,7 @@ def export_excel_data(excel_file, export_config):
                     "data": [row for row in data[1:]]
                 }
             
-            # Escribir los datos en JSON
+            # Write the data en JSON
             with open(output_file, 'w', encoding='utf-8') as jsonfile:
                 json.dump(json_data, jsonfile, indent=2)
             
@@ -3955,7 +3955,7 @@ def export_excel_data(excel_file, export_config):
             sheets = pdf_config.get("sheets")
             
             try:
-                # Intentar usar win32com para Excel si está disponible
+                # Try to use win32com for Excel if available
                 import win32com.client
                 excel = win32com.client.Dispatch("Excel.Application")
                 excel.Visible = False
@@ -3991,8 +3991,8 @@ def export_excel_data(excel_file, export_config):
                 excel.Quit()
             
             except ImportError:
-                logger.warning("win32com no está disponible. No se puede exportar a PDF.")
-                pass  # Si win32com no está disponible, simplemente omitir la exportación PDF
+                logger.warning("win32com is not available. Cannot export to PDF.")
+                pass  # If win32com is not available, simply skip the PDF export
             except Exception as pdf_error:
                 logger.error(f"Error al exportar a PDF: {pdf_error}")
                 pass
@@ -4013,15 +4013,15 @@ def export_excel_data(excel_file, export_config):
         }
 
 def export_single_visible_sheet_pdf(excel_file: str, output_pdf: Optional[str] = None) -> Dict[str, Any]:
-    """Exporta un libro de Excel a PDF solo si contiene una única hoja visible.
+    """Export an Excel workbook to PDF only if it has a single visible sheet.
 
     Args:
-        excel_file: Ruta al archivo Excel a exportar.
-        output_pdf: Ruta del archivo PDF resultante. Si no se indica se usa el
-            mismo nombre que ``excel_file`` con extensión ``.pdf``.
+        excel_file: Path to the Excel file to export.
+        output_pdf: Path of the resulting PDF file. If not provided, the same
+            name as ``excel_file`` with ``.pdf`` extension is used.
 
     Returns:
-        dict: Resultado de la operación.
+        dict: Result of the operation.
     """
     try:
         import shutil
@@ -4034,7 +4034,7 @@ def export_single_visible_sheet_pdf(excel_file: str, output_pdf: Optional[str] =
         visible_sheets = [ws.title for ws in wb.worksheets if getattr(ws, "sheet_state", "visible") == "visible"]
 
         if len(visible_sheets) != 1:
-            msg = f"El archivo debe tener una única hoja visible. Hojas visibles: {len(visible_sheets)}"
+            msg = f"The file must have a single visible sheet. Visible sheets: {len(visible_sheets)}"
             logger.warning(msg)
             return {
                 "success": False,
@@ -4058,7 +4058,7 @@ def export_single_visible_sheet_pdf(excel_file: str, output_pdf: Optional[str] =
             workbook.Close(False)
             excel.Quit()
 
-            msg = f"Archivo exportado correctamente a PDF: {output_pdf}"
+            msg = f"File successfully exported to PDF: {output_pdf}"
             logger.info(msg)
             return {
                 "success": True,
@@ -4067,7 +4067,7 @@ def export_single_visible_sheet_pdf(excel_file: str, output_pdf: Optional[str] =
                 "message": msg,
             }
         except ImportError:
-            logger.info("win32com no disponible, se intentará usar LibreOffice")
+            logger.info("win32com not available, LibreOffice will be tried")
         except Exception as e:
             logger.error(f"Error al exportar con win32com: {e}")
 
@@ -4091,7 +4091,7 @@ def export_single_visible_sheet_pdf(excel_file: str, output_pdf: Optional[str] =
                 "message": msg,
             }
 
-        msg = "No se encontró un método disponible para exportar a PDF."
+        msg = "No available method found to export to PDF."
         logger.error(msg)
         return {
             "success": False,
@@ -4114,28 +4114,27 @@ def export_sheets_to_pdf(
     output_dir: Optional[str] = None,
     single_file: bool = False,
 ) -> Dict[str, Any]:
-    """Exporta una o varias hojas de un libro de Excel a PDF.
+    """Export one or more sheets of an Excel workbook to PDF.
 
     Parameters
     ----------
     excel_file : str
-        Ruta al archivo Excel a exportar.
+        Path to the Excel file to export.
     sheets : Union[str, List[str]], optional
-        Nombre de la hoja o lista de hojas a exportar. Si ``None`` se exportan
-        todas las hojas del libro (una por una).
+        Name of the sheet or list of sheets to export. If ``None`` all sheets
+        in the workbook are exported one by one.
     output_dir : str, optional
-        Carpeta donde guardar los PDF. Por defecto se usa la carpeta del
-        archivo original.
+        Folder where the PDFs will be stored. By default the original file
+        directory is used.
     single_file : bool, optional
-        Si es ``True`` y se especifican varias hojas se intentará crear un único
-        PDF con todas ellas (si el sistema lo permite). Si es ``False`` se
-        generará un PDF por cada hoja.
+        If ``True`` and several sheets are specified a single PDF is generated
+        with all of them if supported. If ``False`` a PDF is created per sheet.
 
     Returns
     -------
     dict
-        Resultado de la operación con la lista de PDFs generados. Si alguna hoja
-        no existe se incluye un aviso en ``warnings``.
+        Operation result with the list of generated PDFs. If any sheet does not
+        exist a warning is included in ``warnings``.
     """
 
     try:
@@ -4165,7 +4164,7 @@ def export_sheets_to_pdf(
                 warnings.append(f"La hoja '{s}' no existe")
 
         if not valid_sheets:
-            msg = "No se encontraron hojas válidas para exportar"
+            msg = "No valid sheets found to export"
             logger.warning(msg)
             return {
                 "success": False,
@@ -4179,7 +4178,7 @@ def export_sheets_to_pdf(
 
         pdf_files: List[str] = []
 
-        # Intentar usar win32com si está disponible
+        # Try to use win32com if available
         try:
             import win32com.client
 
@@ -4206,7 +4205,7 @@ def export_sheets_to_pdf(
             workbook.Close(False)
             excel.Quit()
 
-            msg = "Exportación a PDF realizada correctamente"
+            msg = "PDF export completed successfully"
             logger.info(msg)
             return {
                 "success": True,
@@ -4216,7 +4215,7 @@ def export_sheets_to_pdf(
                 "message": msg,
             }
         except ImportError:
-            logger.info("win32com no disponible, se intentará usar LibreOffice")
+            logger.info("win32com not available, trying LibreOffice")
         except Exception as e:
             logger.error(f"Error al exportar con win32com: {e}")
 
@@ -4276,7 +4275,7 @@ def export_sheets_to_pdf(
                         shutil.move(generated, final)
                         pdf_files.append(final)
 
-            msg = "Exportación a PDF realizada correctamente"
+            msg = "PDF export completed successfully"
             logger.info(msg)
             return {
                 "success": True,
@@ -4286,7 +4285,7 @@ def export_sheets_to_pdf(
                 "message": msg,
             }
 
-        msg = "No se encontró un método disponible para exportar a PDF."
+        msg = "No available method found to export to PDF."
         logger.error(msg)
         return {
             "success": False,
@@ -4312,8 +4311,8 @@ if HAS_MCP:
                  dependencies=["openpyxl", "pandas", "numpy"])
     logger.info("Servidor MCP unificado iniciado correctamente")
     
-    # Registrar funciones básicas de gestión de workbooks
-    @mcp.tool(description="Crea un nuevo fichero Excel vacío")
+    # Register basic workbook management functions
+    @mcp.tool(description="Creates a new empty Excel file")
     def create_workbook_tool(filename, overwrite=False):
         """Create a new empty Excel workbook.
 
@@ -4337,13 +4336,13 @@ if HAS_MCP:
             return {
                 "success": True,
                 "file_path": filename,
-                "message": f"Archivo Excel creado correctamente: {filename}"
+                "message": f"Excel file successfully created: {filename}"
             }
         except Exception as e:
             return {
                 "success": False,
                 "error": str(e),
-                "message": f"Error al crear archivo Excel: {e}"
+                "message": f"Error creating Excel file: {e}"
             }
     
     @mcp.tool(description="Abre un fichero Excel existente")
@@ -4375,13 +4374,13 @@ if HAS_MCP:
                 "file_path": filename,
                 "sheets": sheet_names,
                 "sheet_count": len(sheet_names),
-                "message": f"Archivo Excel abierto correctamente: {filename}"
+                "message": f"Excel file successfully opened: {filename}"
             }
         except Exception as e:
             return {
                 "success": False,
                 "error": str(e),
-                "message": f"Error al abrir archivo Excel: {e}"
+                "message": f"Error opening Excel file: {e}"
             }
     
     @mcp.tool(description="Guarda el Workbook en disco")
@@ -4410,13 +4409,13 @@ if HAS_MCP:
                 "success": True,
                 "original_file": filename,
                 "saved_file": saved_path,
-                "message": f"Archivo Excel guardado correctamente: {saved_path}"
+                "message": f"Excel file successfully saved: {saved_path}"
             }
         except Exception as e:
             return {
                 "success": False,
                 "error": str(e),
-                "message": f"Error al guardar archivo Excel: {e}"
+                "message": f"Error saving Excel file: {e}"
             }
     
     @mcp.tool(description="Lista las hojas disponibles en un archivo Excel")
@@ -4457,8 +4456,8 @@ if HAS_MCP:
                 "message": f"Error al listar hojas: {e}"
             }
     
-    # Registrar funciones básicas de manipulación de hojas
-    @mcp.tool(description="Añade una nueva hoja vacía")
+    # Register basic worksheet manipulation functions
+    @mcp.tool(description="Adds a new empty sheet")
     def add_sheet_tool(filename, sheet_name, index=None):
         """Add a new empty worksheet.
 
@@ -4496,7 +4495,7 @@ if HAS_MCP:
                 "sheet_name": sheet_name,
                 "sheet_index": sheets.index(sheet_name),
                 "all_sheets": sheets,
-                "message": f"Hoja '{sheet_name}' añadida correctamente"
+                "message": f"Sheet '{sheet_name}' added successfully"
             }
         except Exception as e:
             return {
