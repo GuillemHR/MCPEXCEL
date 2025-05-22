@@ -3,43 +3,40 @@
 
 """
 Excel MCP Master (Model Context Protocol for Excel)
--------------------------------------------------------
-Biblioteca unificada para manipular archivos Excel con funcionalidades avanzadas:
-- Combina todos los módulos Excel MCP en una interfaz unificada
-- Proporciona funciones de alto nivel para operaciones comunes
-- Optimiza el flujo de trabajo con Excel
+--------------------------------------------------
+Unified library to manipulate Excel files with advanced features:
+- Combines all Excel MCP modules under a single interface
+- Provides high level functions for common operations
+- Optimizes the workflow when working with Excel
 
-Este módulo integra:
-- excel_mcp_complete.py: Lectura y exploración de datos
-- workbook_manager_mcp.py: Gestión de libros y hojas
-- excel_writer_mcp.py: Escritura y formato de celdas
-- advanced_excel_mcp.py: Tablas, fórmulas, gráficos y tablas dinámicas
+This module integrates:
+- excel_mcp_complete.py: Data reading and exploration
+- workbook_manager_mcp.py: Workbook and sheet management
+- excel_writer_mcp.py: Cell writing and formatting
+- advanced_excel_mcp.py: Tables, formulas, charts and pivot tables
 
 Author: MCP Team
 Version: 1.0
 
-Guía de uso para LLM y agentes
-------------------------------
-Todas las funciones de esta biblioteca están pensadas para ser utilizadas por
-modelos de lenguaje o herramientas automáticas que generan archivos Excel.
-Para obtener los mejores resultados se deben seguir estas recomendaciones de
-contexto en cada operación:
+Usage guide for LLMs and agents
+-------------------------------
+All functions of this library are designed to be used by language models or
+automatic tools that generate Excel files. To obtain the best results, follow
+these context recommendations for each operation:
 
-- **Aplicar estilos en todo momento** para que las hojas resultantes sean
-  visualmente agradables. Utiliza las funciones de esta librería para asignar
-  estilos a celdas, tablas y gráficos.
-- **Evitar la superposición de elementos**. Coloca los gráficos en celdas libres
-  y deja al menos un par de filas de separación respecto a tablas o bloques de
-  texto. Nunca sitúes gráficos encima de texto.
-- **Ajustar automáticamente el ancho de columnas**. Tras escribir tablas o
-  conjuntos de datos revisa qué celdas contienen textos largos y aumenta la
-  anchura de la columna para que todo sea legible sin romper el diseño.
-- **Buscar siempre la disposición más clara y ordenada**, separando secciones y
-  agrupando los elementos relacionados para que el fichero final sea fácil de
-  entender.
-- **Revisar la orientación de los datos**. Si las tablas no son obvias, indica
-  explícitamente si las categorías están en filas o columnas para que las
-  funciones de gráficos las interpreten correctamente.
+- **Apply styles at all times** so the resulting sheets look visually pleasant.
+  Use the functions in this library to style cells, tables and charts.
+- **Avoid element overlap**. Place charts in free cells and leave at least a
+  couple of rows of separation from tables or blocks of text. Never place charts
+  over text.
+- **Automatically adjust column width**. After writing tables or datasets,
+  check which cells contain long text and increase the width so everything is
+  readable without breaking the layout.
+- **Always seek the clearest and most organised layout**, separating sections
+  and grouping related elements so that the final file is easy to understand.
+- **Check the orientation of the data**. If tables are not obvious, explicitly
+  indicate whether the categories are in rows or columns so the chart functions
+  interpret them correctly.
 """
 
 import os
@@ -52,14 +49,14 @@ from pathlib import Path
 from typing import List, Dict, Union, Optional, Tuple, Any, Callable
 import math
 
-# Configuración de logging
+# Logging configuration
 logger = logging.getLogger("excel_mcp_master")
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler(sys.stderr)
 handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 logger.addHandler(handler)
 
-# Importar MCP
+# Import MCP
 try:
     from mcp.server.fastmcp import FastMCP
     HAS_MCP = True
@@ -91,56 +88,56 @@ except ImportError as e:
     logger.warning("Es posible que algunas funcionalidades no estén disponibles")
     HAS_OPENPYXL = False
 
-# Importar módulos Excel MCP existentes
-# Nota: En una implementación real, importaríamos las funciones de los módulos existentes
-# Sin embargo, para este caso, vamos a reimplementar las funciones clave directamente
+# Import existing Excel MCP modules
+# Note: In a real implementation we would import the functions from the existing modules
+# However, for this example the key functions are reimplemented directly
 
-# Clases base de excepciones (unificadas)
+# Base exception classes (unified)
 class ExcelMCPError(Exception):
-    """Excepción base para todos los errores de Excel MCP."""
+    """Base exception for all Excel MCP errors."""
     pass
 
 class FileNotFoundError(ExcelMCPError):
-    """Se lanza cuando no se encuentra un archivo Excel."""
+    """Raised when an Excel file is not found."""
     pass
 
 class FileExistsError(ExcelMCPError):
-    """Se lanza cuando se intenta crear un archivo que ya existe."""
+    """Raised when attempting to create a file that already exists."""
     pass
 
 class SheetNotFoundError(ExcelMCPError):
-    """Se lanza cuando no se encuentra una hoja en el archivo Excel."""
+    """Raised when a sheet is not found in the Excel file."""
     pass
 
 class SheetExistsError(ExcelMCPError):
-    """Se lanza cuando se intenta crear una hoja que ya existe."""
+    """Raised when attempting to create a sheet that already exists."""
     pass
 
 class CellReferenceError(ExcelMCPError):
-    """Se lanza cuando hay un problema con una referencia de celda."""
+    """Raised when there is an issue with a cell reference."""
     pass
 
 class RangeError(ExcelMCPError):
-    """Se lanza cuando hay un problema con un rango de celdas."""
+    """Raised when there is an issue with a cell range."""
     pass
 
 class TableError(ExcelMCPError):
-    """Se lanza cuando hay un problema con una tabla de Excel."""
+    """Raised when there is an issue with an Excel table."""
     pass
 
 class ChartError(ExcelMCPError):
-    """Se lanza cuando hay un problema con un gráfico."""
+    """Raised when there is an issue with a chart."""
     pass
 
 class FormulaError(ExcelMCPError):
-    """Se lanza cuando hay un problema con una fórmula."""
+    """Raised when there is an issue with a formula."""
     pass
 
 class PivotTableError(ExcelMCPError):
-    """Se lanza cuando hay un problema con una tabla dinámica."""
+    """Raised when there is an issue with a pivot table."""
     pass
 
-# Utilidades comunes 
+# Common utilities 
 class ExcelRange:
     """
     Clase para manipular y convertir rangos de Excel.
@@ -152,16 +149,16 @@ class ExcelRange:
     @staticmethod
     def parse_cell_ref(cell_ref: str) -> Tuple[int, int]:
         """
-        Convierte una referencia de celda en estilo A1 a coordenadas (fila, columna) 0-based.
+        Convert an A1-style cell reference to zero-based (row, column) coordinates.
         
         Args:
-            cell_ref: Referencia de celda en formato Excel (ej: 'A1', 'B5')
+            cell_ref: Cell reference in Excel format (e.g. "A1", "B5")
             
         Returns:
-            Tupla (fila, columna) con índices base 0
+            Tuple (row, column) using zero-based indices
             
         Raises:
-            ValueError: Si la referencia de celda no es válida
+            ValueError: If the cell reference is not valid
         """
         if not cell_ref or not isinstance(cell_ref, str):
             raise ValueError(f"Referencia de celda inválida: {cell_ref}")
@@ -188,16 +185,16 @@ class ExcelRange:
     @staticmethod
     def parse_range(range_str: str) -> Tuple[int, int, int, int]:
         """
-        Convierte un rango en estilo A1:B5 a coordenadas (row1, col1, row2, col2) 0-based.
+        Convert a range in A1:B5 style to zero-based coordinates (row1, col1, row2, col2).
         
         Args:
-            range_str: Rango en formato Excel (ej: 'A1:B5')
+            range_str: Range in Excel format (e.g. "A1:B5")
             
         Returns:
-            Tupla (fila_inicio, col_inicio, fila_fin, col_fin) con índices base 0
+            Tuple (start_row, start_col, end_row, end_col) using zero-based indices
             
         Raises:
-            ValueError: Si el rango no es válido
+            ValueError: If the range is not valid
         """
         if not range_str or not isinstance(range_str, str):
             raise ValueError(f"Rango inválido: {range_str}")
@@ -224,14 +221,14 @@ class ExcelRange:
     @staticmethod
     def cell_to_a1(row: int, col: int) -> str:
         """
-        Convierte coordenadas (fila, columna) 0-based a referencia de celda A1.
+        Convert zero-based (row, column) coordinates to an A1 cell reference.
         
         Args:
-            row: Índice de fila (base 0)
-            col: Índice de columna (base 0)
+            row: Row index (zero-based)
+            col: Column index (zero-based)
             
         Returns:
-            Referencia de celda en formato A1
+            Cell reference in A1 format
         """
         if row < 0 or col < 0:
             raise ValueError(f"Índices negativos no válidos: fila={row}, columna={col}")
@@ -253,16 +250,16 @@ class ExcelRange:
     @staticmethod
     def range_to_a1(start_row: int, start_col: int, end_row: int, end_col: int) -> str:
         """
-        Convierte coordenadas de rango 0-based a rango A1:B5.
+        Convert zero-based range coordinates to an A1:B5 style range.
         
         Args:
-            start_row: Fila inicial (base 0)
-            start_col: Columna inicial (base 0)
-            end_row: Fila final (base 0)
-            end_col: Columna final (base 0)
+            start_row: Starting row (zero-based)
+            start_col: Starting column (zero-based)
+            end_row: Ending row (zero-based)
+            end_col: Ending column (zero-based)
             
         Returns:
-            Rango en formato A1:B5
+            Range in A1:B5 format
         """
         start_cell = ExcelRange.cell_to_a1(start_row, start_col)
         end_cell = ExcelRange.cell_to_a1(end_row, end_col)
@@ -273,14 +270,14 @@ class ExcelRange:
 
     @staticmethod
     def parse_range_with_sheet(range_str: str) -> Tuple[Optional[str], int, int, int, int]:
-        """Convierte un rango que puede incluir hoja a tupla ``(sheet, row1, col1, row2, col2)``.
+        """Convert a range that may include a sheet to a tuple ``(sheet, row1, col1, row2, col2)``.
 
         Args:
-            range_str: Cadena de rango, posiblemente con prefijo de hoja ``Hoja!A1:B2``.
+            range_str: Range string, possibly with sheet prefix ``Sheet!A1:B2``.
 
         Returns:
-            Tupla ``(sheet, start_row, start_col, end_row, end_col)`` donde ``sheet``
-            es ``None`` si no se especificó hoja.
+            Tuple ``(sheet, start_row, start_col, end_row, end_col)`` where ``sheet``
+            is ``None`` if no sheet was specified.
         """
         if not range_str or not isinstance(range_str, str):
             raise ValueError(f"Rango inválido: {range_str}")
