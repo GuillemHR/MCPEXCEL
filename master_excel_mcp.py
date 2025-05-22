@@ -554,10 +554,10 @@ def _range_has_blank(ws: Any, min_row: int, min_col: int, max_row: int, max_col:
     return False
 
 # ----------------------------------------
-# FUNCIONES BASE (reimplementadas de los módulos originales)
+# BASE FUNCTIONS
 # ----------------------------------------
 
-# 1. Gestión de Workbooks (de workbook_manager_mcp.py)
+# 1. Gestión de Workbooks
 def create_workbook(filename: str, overwrite: bool = False) -> Any:
     """
     Create a new empty Excel file.
@@ -764,7 +764,7 @@ def rename_sheet(wb: Any, old_name: str, new_name: str) -> None:
         logger.error(f"Error al renombrar la hoja '{old_name}' a '{new_name}': {e}")
         raise ExcelMCPError(f"Error al renombrar la hoja: {e}")
 
-# 2. Lectura y exploración de datos (de excel_mcp_complete.py)
+# 2. Lectura y exploración de datos
 def read_sheet_data(wb: Any, sheet_name: str, range_str: Optional[str] = None,
                    formulas: bool = False) -> List[List[Any]]:
     """
