@@ -1067,10 +1067,49 @@ def update_cell(ws: Any, cell: str, value_or_formula: Any) -> None:
                     lines * 15,
                 )
 
+
     except KeyError:
         raise CellReferenceError(f"Referencia de celda inválida: '{cell}'")
     except Exception as e:
         raise ExcelMCPError(f"Error al actualizar celda: {e}")
+
+def autofit_table(ws: Any, cell_range: str) -> None:
+    """Ajusta ancho de columnas y alto de filas para un rango tabular."""
+    start_row, start_col, end_row, end_col = ExcelRange.parse_range(cell_range)
+
+    col_widths: Dict[int, int] = {}
+    row_heights: Dict[int, int] = {}
+
+    for row in range(start_row, end_row + 1):
+        max_lines = 1
+        for col in range(start_col, end_col + 1):
+            cell = ws.cell(row=row + 1, column=col + 1)
+            value = cell.value
+            if value is None:
+                continue
+            text = str(value)
+            longest = max(len(line) for line in text.splitlines())
+            col_widths[col] = max(col_widths.get(col, 0), longest)
+            lines = len(text.splitlines())
+            if longest > 40:
+                lines = max(lines, (longest // 40) + 1)
+            if lines > 1 or "\n" in text:
+                cell.alignment = Alignment(wrap_text=True)
+            max_lines = max(max_lines, lines)
+        if max_lines > 1:
+            row_heights[row] = max_lines * 15
+
+    for col, width in col_widths.items():
+        column_letter = get_column_letter(col + 1)
+        current = ws.column_dimensions[column_letter].width or 8.43
+        desired = min(width + 2, 80)
+        if desired > current:
+            ws.column_dimensions[column_letter].width = desired
+
+    for row, height in row_heights.items():
+        current = ws.row_dimensions[row + 1].height or 15
+        if height > current:
+            ws.row_dimensions[row + 1].height = height
 
 def apply_style(ws: Any, cell_range: str, style_dict: Dict[str, Any]) -> None:
     """
@@ -1243,38 +1282,10 @@ def add_table(ws: Any, table_name: str, cell_range: str, style=None) -> Any:
         ws.add_table(table)
 
         # ------------------------------
-        # Ajuste automático de ancho de columnas y alto de filas
-        # sólo para el rango de la tabla
+        # Ajuste automático de columnas y filas de la tabla
         # ------------------------------
         try:
-            start_row, start_col, end_row, end_col = ExcelRange.parse_range(cell_range)
-            # Ajustar columnas según el contenido más largo
-            for col in range(start_col, end_col + 1):
-                column_letter = get_column_letter(col + 1)
-                max_len = 0
-                for row in range(start_row, end_row + 1):
-                    value = ws.cell(row=row + 1, column=col + 1).value
-                    if value is not None:
-                        text = str(value)
-                        longest = max(len(line) for line in text.splitlines())
-                        max_len = max(max_len, longest)
-                        if len(text.splitlines()) > 1 or len(text) > 30:
-                            ws.cell(row=row + 1, column=col + 1).alignment = Alignment(wrap_text=True)
-                ws.column_dimensions[column_letter].width = max(ws.column_dimensions[column_letter].width or 0, max_len + 2)
-
-            # Ajustar alto de fila para celdas con texto largo
-            for row in range(start_row, end_row + 1):
-                max_lines = 1
-                for col in range(start_col, end_col + 1):
-                    value = ws.cell(row=row + 1, column=col + 1).value
-                    if value is not None:
-                        text = str(value)
-                        lines = len(text.splitlines())
-                        if len(text) > 40:
-                            lines = max(lines, (len(text) // 40) + 1)
-                        max_lines = max(max_lines, lines)
-                if max_lines > 1:
-                    ws.row_dimensions[row + 1].height = max(ws.row_dimensions[row + 1].height or 15, max_lines * 15)
+            autofit_table(ws, cell_range)
         except Exception:
             pass
 
@@ -2150,12 +2161,7 @@ def create_dashboard(wb: Any, dashboard_config: Dict[str, Any],
         "alignment": "center"
     })
     
-    # Por simplicidad, unimos algunas celdas para el título
-    try:
-        ws.merge_cells("A1:J1")
-    except:
-        # Ignorar si falla
-        pass
+
     
     # Espacio después del título
     current_row = 3
@@ -2511,11 +2517,7 @@ def apply_excel_template(wb: Any, template_name: str, data: Dict[str, Any]) -> D
             "alignment": "center"
         })
         
-        # Por simplicidad, unimos algunas celdas para el título
-        try:
-            ws.merge_cells("A1:K1")
-        except:
-            pass
+
             
         # Crear secciones de análisis según la estructura de los datos
         current_row = 3
@@ -2599,11 +2601,7 @@ def apply_excel_template(wb: Any, template_name: str, data: Dict[str, Any]) -> D
             "alignment": "center"
         })
         
-        # Por simplicidad, unimos algunas celdas para el título
-        try:
-            ws.merge_cells("A1:G1")
-        except:
-            pass
+
         
         # Escribir datos de proyectos
         write_sheet_data(ws, "A3", projects)
