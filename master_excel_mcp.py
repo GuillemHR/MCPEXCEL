@@ -4501,10 +4501,10 @@ if HAS_MCP:
             return {
                 "success": False,
                 "error": str(e),
-                "message": f"Error al añadir hoja: {e}"
+                "message": f"Error adding sheet: {e}"
             }
     
-    @mcp.tool(description="Elimina la hoja indicada")
+    @mcp.tool(description="Delete the indicated sheet")
     def delete_sheet_tool(filename, sheet_name):
         """Delete the indicated worksheet.
 
@@ -4540,16 +4540,16 @@ if HAS_MCP:
                 "deleted_sheet": sheet_name,
                 "remaining_sheets": remaining_sheets,
                 "remaining_count": len(remaining_sheets),
-                "message": f"Hoja '{sheet_name}' eliminada correctamente"
+                "message": f"Sheet '{sheet_name}' successfully deleted"
             }
         except Exception as e:
             return {
                 "success": False,
                 "error": str(e),
-                "message": f"Error al eliminar hoja: {e}"
+                "message": f"Error deleting sheet: {e}"
             }
     
-    @mcp.tool(description="Renombra una hoja")
+    @mcp.tool(description="Rename a sheet")
     def rename_sheet_tool(filename, old_name, new_name):
         """Rename a worksheet.
 
@@ -4585,17 +4585,17 @@ if HAS_MCP:
                 "old_name": old_name,
                 "new_name": new_name,
                 "all_sheets": sheets,
-                "message": f"Hoja renombrada de '{old_name}' a '{new_name}'"
+                "message": f"Sheet renamed from '{old_name}' to '{new_name}'"
             }
         except Exception as e:
             return {
                 "success": False,
                 "error": str(e),
-                "message": f"Error al renombrar hoja: {e}"
+                "message": f"Error renaming sheet: {e}"
             }
     
-    # Registrar funciones básicas de escritura
-    @mcp.tool(description="Escribe un array bidimensional de valores o fórmulas")
+    # Register basic writing functions
+    @mcp.tool(description="Write a two-dimensional array of values or formulas")
     def write_sheet_data_tool(file_path, sheet_name, start_cell, data):
         """Write a two-dimensional array of values or formulas to a worksheet.
 
@@ -4626,18 +4626,18 @@ if HAS_MCP:
             )
         """
         try:
-            # Validar argumentos
+            # Validate arguments
             if not isinstance(data, list):
-                raise ValueError("El parámetro 'data' debe ser una lista")
-            
-            # Abrir el archivo y obtener la hoja
+                raise ValueError("The 'data' parameter must be a list")
+
+            # Open the file and get the sheet
             wb = openpyxl.load_workbook(file_path)
             ws = get_sheet(wb, sheet_name)
-            
-            # Escribir los datos
+
+            # Write the data
             write_sheet_data(ws, start_cell, data)
-            
-            # Guardar y cerrar
+
+            # Save and close
             wb.save(file_path)
             
             return {
@@ -4647,16 +4647,16 @@ if HAS_MCP:
                 "start_cell": start_cell,
                 "rows_written": len(data),
                 "columns_written": max([len(row) if isinstance(row, list) else 1 for row in data], default=0),
-                "message": f"Datos escritos correctamente desde {start_cell}"
+                "message": f"Data successfully written starting at {start_cell}"
             }
         except Exception as e:
             return {
                 "success": False,
                 "error": str(e),
-                "message": f"Error al escribir datos: {e}"
+                "message": f"Error writing data: {e}"
             }
     
-    @mcp.tool(description="Actualiza individualmente una celda")
+    @mcp.tool(description="Update a single cell")
     def update_cell_tool(file_path, sheet_name, cell, value_or_formula):
         """Update the value or formula of a specific cell.
 
@@ -4681,14 +4681,14 @@ if HAS_MCP:
             update_cell_tool("C:/data/report.xlsx", "Sales", "D4", "=SUM(A1:A10)")  # Formula
         """
         try:
-            # Abrir el archivo y obtener la hoja
+            # Open the file and get the sheet
             wb = openpyxl.load_workbook(file_path)
             ws = get_sheet(wb, sheet_name)
             
-            # Actualizar la celda
+            # Update the cell
             update_cell(ws, cell, value_or_formula)
             
-            # Guardar y cerrar
+            # Save and close
             wb.save(file_path)
             
             return {
@@ -4697,17 +4697,17 @@ if HAS_MCP:
                 "sheet_name": sheet_name,
                 "cell": cell,
                 "value": value_or_formula,
-                "message": f"Celda {cell} actualizada correctamente en la hoja {sheet_name}"
+                "message": f"Cell {cell} successfully updated in sheet {sheet_name}"
             }
         except Exception as e:
             return {
                 "success": False,
                 "error": str(e),
-                "message": f"Error al actualizar celda: {e}"
+                "message": f"Error updating cell: {e}"
             }
     
-    # Registrar funciones avanzadas
-    @mcp.tool(description="Define un rango como Tabla con estilo en una hoja de Excel")
+    # Register advanced functions
+    @mcp.tool(description="Define a range as a formatted table on an Excel sheet")
     def add_table_tool(file_path, sheet_name, table_name, cell_range, style=None):
         """Define a range as a formatted table in Excel.
 
@@ -4740,16 +4740,16 @@ if HAS_MCP:
             )
         """
         try:
-            # Abrir el archivo
+            # Open the file
             wb = openpyxl.load_workbook(file_path)
             
-            # Obtener la hoja
+            # Get the sheet
             ws = get_sheet(wb, sheet_name)
             
-            # Añadir la tabla
+            # Add the table
             table = add_table(ws, table_name, cell_range, style)
             
-            # Guardar cambios
+            # Save changes
             wb.save(file_path)
             
             return {
@@ -4759,16 +4759,16 @@ if HAS_MCP:
                 "table_name": table_name,
                 "range": cell_range,
                 "style": style,
-                "message": f"Tabla '{table_name}' creada correctamente en el rango {cell_range}"
+                "message": f"Table '{table_name}' successfully created in range {cell_range}"
             }
         except Exception as e:
             return {
                 "success": False,
                 "error": str(e),
-                "message": f"Error al crear tabla: {e}"
+                "message": f"Error creating table: {e}"
             }
     
-    @mcp.tool(description="Inserta un gráfico nativo en una hoja de Excel con múltiples opciones de personalización")
+    @mcp.tool(description="Insert a native chart into an Excel sheet with multiple customization options")
     def add_chart_tool(file_path, sheet_name, chart_type, data_range, title=None, position=None, style=None, theme=None, custom_palette=None):
         """Insert a professional native chart into a worksheet.
 
@@ -4809,16 +4809,16 @@ if HAS_MCP:
             )
         """
         try:
-            # Abrir el archivo
+            # Open the file
             wb = openpyxl.load_workbook(file_path)
             
-            # Crear gráfico
+            # Create chart
             chart_id, chart = add_chart(wb, sheet_name, chart_type, data_range, title, position, style, theme, custom_palette)
             
-            # Guardar cambios
+            # Save changes
             wb.save(file_path)
             
-            # Extraer tipo de gráfico para mejor mensaje de respuesta
+            # Extract chart type for a better response message
             chart_type_display = chart_type
             if chart_type.lower() == "col":
                 chart_type_display = "column"
@@ -4832,17 +4832,17 @@ if HAS_MCP:
                 "data_range": data_range,
                 "title": title,
                 "position": position,
-                "message": f"Gráfico '{chart_type_display}' creado correctamente con ID {chart_id}"
+                "message": f"Chart '{chart_type_display}' successfully created with ID {chart_id}"
             }
         except Exception as e:
             return {
                 "success": False,
                 "error": str(e),
-                "message": f"Error al crear gráfico: {e}"
+                "message": f"Error creating chart: {e}"
             }
     
-    # Registrar nuevas funciones combinadas
-    @mcp.tool(description="Crea una hoja con datos en un solo paso")
+    # Register new combined functions
+    @mcp.tool(description="Create a sheet with data in one step")
     def create_sheet_with_data_tool(file_path, sheet_name, data, overwrite=False):
         """Create an Excel file with a single sheet and data in one step.
 
@@ -4858,37 +4858,37 @@ if HAS_MCP:
             dict: Result of the operation.
         """
         try:
-            # Verificar si el archivo existe
+            # Check if the file exists
             file_exists = os.path.exists(file_path)
             
             if file_exists and not overwrite:
-                raise FileExistsError(f"El archivo '{file_path}' ya existe. Use overwrite=True para sobrescribir.")
+                raise FileExistsError(f"The file '{file_path}' already exists. Use overwrite=True to overwrite.")
             
-            # Crear o abrir el archivo
+            # Create or open the file
             if not file_exists or overwrite:
                 wb = openpyxl.Workbook()
-                # Eliminar la hoja predeterminada si existe
+                # Remove the default sheet if it exists
                 if "Sheet" in wb.sheetnames:
                     del wb["Sheet"]
             else:
                 wb = openpyxl.load_workbook(file_path)
             
-            # Verificar si la hoja ya existe
+            # Check if the sheet already exists
             if sheet_name in wb.sheetnames:
                 if overwrite:
-                    # Eliminar la hoja existente
+                    # Delete the existing sheet
                     del wb[sheet_name]
                 else:
-                    raise SheetExistsError(f"La hoja '{sheet_name}' ya existe. Use overwrite=True para sobrescribir.")
+                    raise SheetExistsError(f"The sheet '{sheet_name}' already exists. Use overwrite=True to overwrite.")
             
-            # Crear la hoja
+            # Create the sheet
             ws = wb.create_sheet(sheet_name)
             
-            # Escribir los datos
+            # Write the data
             if data:
                 write_sheet_data(ws, "A1", data)
             
-            # Guardar el archivo
+            # Save the file
             wb.save(file_path)
             
             return {
@@ -4897,16 +4897,16 @@ if HAS_MCP:
                 "sheet_name": sheet_name,
                 "rows_written": len(data) if data else 0,
                 "columns_written": max([len(row) if isinstance(row, list) else 1 for row in data], default=0) if data else 0,
-                "message": f"Archivo creado con hoja '{sheet_name}' y datos"
+                "message": f"File created with sheet '{sheet_name}' and data"
             }
         except Exception as e:
             return {
                 "success": False,
                 "error": str(e),
-                "message": f"Error al crear hoja con datos: {e}"
+                "message": f"Error creating sheet with data: {e}"
             }
     
-    @mcp.tool(description="Crea una tabla formateada con datos en un solo paso")
+    @mcp.tool(description="Create a formatted table with data in one step")
     def create_formatted_table_tool(file_path, sheet_name, start_cell, data, table_name, table_style="TableStyleMedium9", formats=None):
         """Create a formatted table with data in one step.
 
@@ -4929,45 +4929,45 @@ if HAS_MCP:
             dict: Result of the operation.
         """
         try:
-            # Verificar si el archivo existe, si no, crearlo
+            # Check if the file exists, if not, create it
             if not os.path.exists(file_path):
                 wb = openpyxl.Workbook()
                 if "Sheet" in wb.sheetnames and sheet_name != "Sheet":
-                    # Renombrar la hoja predeterminada
+                    # Rename the default sheet
                     wb["Sheet"].title = sheet_name
             else:
                 wb = openpyxl.load_workbook(file_path)
                 
-                # Crear la hoja si no existe
+                # Create the sheet if it doesn't exist
                 if sheet_name not in wb.sheetnames:
                     wb.create_sheet(sheet_name)
             
-            # Obtener la hoja
+            # Get the sheet
             ws = wb[sheet_name]
             
-            # Escribir los datos
+            # Write the data
             write_sheet_data(ws, start_cell, data)
             
-            # Determinar el rango de la tabla
+            # Determine the table range
             start_row, start_col = ExcelRange.parse_cell_ref(start_cell)
             end_row = start_row + len(data) - 1
             end_col = start_col + (len(data[0]) if data and len(data) > 0 else 0) - 1
             table_range = ExcelRange.range_to_a1(start_row, start_col, end_row, end_col)
             
-            # Crear la tabla
+            # Create the table
             add_table(ws, table_name, table_range, table_style)
             
-            # Aplicar formatos si se proporcionan
+            # Apply formats if provided
             if formats:
                 for cell_range, fmt in formats.items():
                     if isinstance(fmt, dict):
-                        # Es un estilo
+                        # It's a style
                         apply_style(ws, cell_range, fmt)
                     else:
-                        # Es un formato numérico
+                        # It's a number format
                         apply_number_format(ws, cell_range, fmt)
             
-            # Guardar el archivo
+            # Save the file
             wb.save(file_path)
             
             return {
@@ -4977,16 +4977,16 @@ if HAS_MCP:
                 "table_name": table_name,
                 "table_range": table_range,
                 "table_style": table_style,
-                "message": f"Tabla '{table_name}' creada y formateada correctamente"
+                "message": f"Table '{table_name}' created and formatted successfully"
             }
         except Exception as e:
             return {
                 "success": False,
                 "error": str(e),
-                "message": f"Error al crear tabla formateada: {e}"
+                "message": f"Error creating formatted table: {e}"
             }
     
-    @mcp.tool(description="Crea un gráfico a partir de datos nuevos en un solo paso")
+    @mcp.tool(description="Create a chart from new data in one step")
     def create_chart_from_data_tool(file_path, sheet_name, data, chart_type, position=None, title=None, style=None):
         """Create a chart from new data in one step.
 
@@ -5005,54 +5005,54 @@ if HAS_MCP:
             dict: Result of the operation.
         """
         try:
-            # Verificar si el archivo existe, si no, crearlo
+            # Check if the file exists, if not, create it
             if not os.path.exists(file_path):
                 wb = openpyxl.Workbook()
                 if "Sheet" in wb.sheetnames and sheet_name != "Sheet":
-                    # Renombrar la hoja predeterminada
+                    # Rename the default sheet
                     wb["Sheet"].title = sheet_name
             else:
                 wb = openpyxl.load_workbook(file_path)
                 
-                # Crear la hoja si no existe
+                # Create the sheet if it doesn't exist
                 if sheet_name not in wb.sheetnames:
                     wb.create_sheet(sheet_name)
             
-            # Obtener la hoja
+            # Get the sheet
             ws = wb[sheet_name]
             
-            # Encontrar una zona libre para los datos
-            # Buscar por la parte izquierda para colocar los datos de origen
-            # (La convención común es poner datos a la izquierda y gráficos a la derecha)
+            # Find a free area for the data
+            # Search from the left to place the source data
+            # (The common convention is to put data on the left and charts on the right)
             start_cell = "A1"
             
-            # Comprobar si ya hay datos en esa zona
+            # Check if there is already data in that area
             if ws["A1"].value is not None:
-                # Buscar la primera columna vacía
+                # Find the first empty column
                 col = 1
                 while ws.cell(row=1, column=col).value is not None:
                     col += 1
                 start_cell = f"{get_column_letter(col)}1"
             
-            # Escribir los datos
+            # Write the data
             write_sheet_data(ws, start_cell, data)
             
-            # Determinar el rango de datos para el gráfico
+            # Determine the data range for the chart
             start_row, start_col = ExcelRange.parse_cell_ref(start_cell)
             end_row = start_row + len(data) - 1
             end_col = start_col + (len(data[0]) if data and len(data) > 0 else 0) - 1
             data_range = ExcelRange.range_to_a1(start_row, start_col, end_row, end_col)
             
-            # Determinar posición para el gráfico si no se proporciona
+            # Determine chart position if not provided
             if not position:
-                # Colocar el gráfico a la derecha de los datos con un espacio
+                # Place the chart to the right of the data with a space
                 chart_col = end_col + 2  # Dejar una columna de espacio
                 position = f"{get_column_letter(chart_col + 1)}1"
             
-            # Crear el gráfico
+            # Create the chart
             chart_id, _ = add_chart(wb, sheet_name, chart_type, data_range, title, position, style)
             
-            # Guardar el archivo
+            # Save the file
             wb.save(file_path)
             
             return {
@@ -5063,17 +5063,17 @@ if HAS_MCP:
                 "chart_id": chart_id,
                 "chart_type": chart_type,
                 "position": position,
-                "message": f"Gráfico '{chart_type}' creado correctamente a partir de nuevos datos"
+                "message": f"Chart '{chart_type}' successfully created from new data"
             }
         except Exception as e:
             return {
                 "success": False,
                 "error": str(e),
-                "message": f"Error al crear gráfico con datos: {e}"
+                "message": f"Error creating chart with data: {e}"
             }
     
     
-    @mcp.tool(description="Actualiza un informe existente con nuevos datos")
+    @mcp.tool(description="Update an existing report with new data")
     def update_report_tool(file_path, data_updates, config_updates=None, recalculate=True):
         """Update an existing report with new data and configuration changes.
 
@@ -5113,69 +5113,69 @@ if HAS_MCP:
             dict: Result of the operation.
         """
         try:
-            # Verificar que el archivo existe
+            # Verify that the file exists
             if not os.path.exists(file_path):
-                raise FileNotFoundError(f"El archivo no existe: {file_path}")
+                raise FileNotFoundError(f"The file does not exist: {file_path}")
             
-            # Abrir el archivo
+            # Open the file
             wb = openpyxl.load_workbook(file_path)
             
-            # Actualizar datos
+            # Update data
             for sheet_name, ranges in data_updates.items():
                 if sheet_name not in wb.sheetnames:
-                    logger.warning(f"La hoja '{sheet_name}' no existe, se omitirá")
+                    logger.warning(f"Sheet '{sheet_name}' does not exist, it will be skipped")
                     continue
                 
                 ws = wb[sheet_name]
                 
                 for range_str, data in ranges.items():
-                    # Si el rango es una sola celda, extraer la celda de inicio
+                    # If the range is a single cell, extract the start cell
                     if ':' not in range_str:
                         start_cell = range_str
                     else:
                         start_cell = range_str.split(':')[0]
                     
-                    # Escribir los datos
+                    # Write the data
                     write_sheet_data(ws, start_cell, data)
             
-            # Actualizar configuraciones
+            # Update settings
             if config_updates:
-                # Actualizar tablas
+                # Update tables
                 for table_config in config_updates.get("tables", []):
                     sheet_name = table_config["sheet"]
                     table_name = table_config["name"]
                     
                     if sheet_name not in wb.sheetnames:
-                        logger.warning(f"La hoja '{sheet_name}' no existe para actualizar la tabla '{table_name}'")
+                        logger.warning(f"Sheet '{sheet_name}' does not exist to update the table '{table_name}'")
                         continue
                     
                     ws = wb[sheet_name]
                     
-                    # Verificar si la tabla existe
+                    # Check if the table exists
                     if not hasattr(ws, 'tables') or table_name not in ws.tables:
-                        logger.warning(f"La tabla '{table_name}' no existe en la hoja '{sheet_name}'")
+                        logger.warning(f"The table '{table_name}' does not exist on sheet '{sheet_name}'")
                         continue
                     
-                    # Actualizar rango de la tabla si se proporciona
+                    # Update the table range if provided
                     if "range" in table_config:
                         refresh_table(ws, table_name, table_config["range"])
                 
-                # Actualizar gráficos
+                # Update charts
                 for chart_config in config_updates.get("charts", []):
                     sheet_name = chart_config["sheet"]
                     chart_id = chart_config["id"]
                     
                     if sheet_name not in wb.sheetnames:
-                        logger.warning(f"La hoja '{sheet_name}' no existe para actualizar el gráfico")
+                        logger.warning(f"Sheet '{sheet_name}' does not exist to update the chart")
                         continue
                     
                     ws = wb[sheet_name]
                     
-                    # Verificar si el chart_id es un índice o un título
+                    # Check if chart_id is an index or a title
                     if isinstance(chart_id, (int, str)) and str(chart_id).isdigit():
                         chart_idx = int(chart_id)
                     else:
-                        # Buscar el gráfico por título
+                        # Search the chart by title
                         chart_idx = None
                         for i, chart_rel in enumerate(ws._charts):
                             chart = chart_rel[0]
@@ -5184,10 +5184,10 @@ if HAS_MCP:
                                 break
                     
                     if chart_idx is None or chart_idx >= len(ws._charts):
-                        logger.warning(f"No se encontró el gráfico con ID/título '{chart_id}' en la hoja '{sheet_name}'")
+                        logger.warning(f"Chart with ID/title '{chart_id}' not found on sheet '{sheet_name}'")
                         continue
                     
-                    # Actualizar propiedades del gráfico
+                    # Update chart properties
                     chart = ws._charts[chart_idx][0]
                     
                     if "title" in chart_config:
@@ -5197,33 +5197,33 @@ if HAS_MCP:
                         try:
                             apply_chart_style(chart, chart_config["style"])
                         except Exception as style_error:
-                            logger.warning(f"Error al aplicar estilo al gráfico: {style_error}")
+                            logger.warning(f"Error applying style to chart: {style_error}")
             
-            # Recalcular fórmulas si se solicita
+            # Recalculate formulas if requested
             if recalculate:
-                # openpyxl no tiene un método directo para recalcular
-                # En Excel, esto se haría automáticamente al abrir el archivo
-                # Aquí simplemente registramos que se solicitó recalcular
-                logger.info("Se solicitó recalcular fórmulas (esto ocurrirá al abrir el archivo en Excel)")
+                # openpyxl has no direct method to recalculate
+                # In Excel, this happens automatically when opening the file
+                # Here we simply log that recalculation was requested
+                logger.info("Formula recalculation was requested (this will happen when the file is opened in Excel)")
             
-            # Guardar el archivo
+            # Save the file
             wb.save(file_path)
             
             return {
                 "success": True,
                 "file_path": file_path,
                 "sheets_updated": list(data_updates.keys()),
-                "message": f"Informe actualizado correctamente: {file_path}"
+                "message": f"Report successfully updated: {file_path}"
             }
         except Exception as e:
-            logger.error(f"Error al actualizar informe: {e}")
+            logger.error(f"Error updating report: {e}")
             return {
                 "success": False,
                 "error": str(e),
-                "message": f"Error al actualizar informe: {e}"
+                "message": f"Error updating report: {e}"
             }
     
-    @mcp.tool(description="Crea un dashboard dinámico con múltiples visualizaciones en un solo paso")
+    @mcp.tool(description="Create a dynamic dashboard with multiple visualizations in one step")
     def create_dashboard_tool(file_path, data, dashboard_config, overwrite=False):
         """Create a dynamic dashboard with multiple visualizations in one step.
 
@@ -5240,7 +5240,7 @@ if HAS_MCP:
         """
         return create_dynamic_dashboard(file_path, data, dashboard_config, overwrite)
     
-    @mcp.tool(description="Crea un informe basado en una plantilla Excel, sustituyendo datos y actualizando gráficos")
+    @mcp.tool(description="Create a report based on an Excel template, replacing data and updating charts")
     def create_report_from_template_tool(template_file, output_file, data_mappings, chart_mappings=None, format_mappings=None):
         """Create a report from an Excel template, replacing data and updating charts.
 
@@ -5258,7 +5258,7 @@ if HAS_MCP:
         """
         return create_report_from_template(template_file, output_file, data_mappings, chart_mappings, format_mappings)
     
-    @mcp.tool(description="Importa datos desde múltiples fuentes (CSV, JSON, SQL) a un archivo Excel")
+    @mcp.tool(description="Import data from multiple sources (CSV, JSON, SQL) into an Excel file")
     def import_data_tool(excel_file, import_config, sheet_name=None, start_cell="A1", create_tables=False):
         """Import data from multiple sources (CSV, JSON, SQL) into an Excel file.
 
@@ -5274,7 +5274,7 @@ if HAS_MCP:
         """
         return import_multi_source_data(excel_file, import_config, sheet_name, start_cell, create_tables)
     
-    @mcp.tool(description="Exporta datos de Excel a múltiples formatos (CSV, JSON, PDF)")
+    @mcp.tool(description="Export Excel data to multiple formats (CSV, JSON, PDF)")
     def export_data_tool(excel_file, export_config):
         """Export Excel data to multiple formats (CSV, JSON, PDF).
 
@@ -5287,7 +5287,7 @@ if HAS_MCP:
         """
         return export_excel_data(excel_file, export_config)
     
-    @mcp.tool(description="Filtra y extrae datos de una tabla o rango en formato de registros")
+    @mcp.tool(description="Filter and extract data from a table or range as records")
     def filter_data_tool(file_path, sheet_name, range_str=None, table_name=None, filters=None):
         """Filter and extract data from a table or range as records.
 
@@ -5309,51 +5309,51 @@ if HAS_MCP:
             dict: Result of the operation with the filtered data.
         """
         try:
-            # Validar argumentos
+            # Validate arguments
             if not range_str and not table_name:
-                raise ValueError("Debe proporcionar 'range_str' o 'table_name'")
-            
-            # Abrir el archivo
+                raise ValueError("You must provide 'range_str' or 'table_name'")
+
+            # Open the file
             wb = openpyxl.load_workbook(file_path, data_only=True)
-            
-            # Verificar que la hoja existe
+
+            # Verify that the sheet exists
             if sheet_name not in wb.sheetnames:
-                raise SheetNotFoundError(f"La hoja '{sheet_name}' no existe en el archivo")
+                raise SheetNotFoundError(f"Sheet '{sheet_name}' does not exist in the file")
             
             ws = wb[sheet_name]
             
-            # Si se proporciona table_name, obtener su rango
+            # If table_name is provided, get its range
             if table_name:
                 if not hasattr(ws, 'tables') or table_name not in ws.tables:
-                    raise TableNotFoundError(f"La tabla '{table_name}' no existe en la hoja '{sheet_name}'")
+                    raise TableNotFoundError(f"Table '{table_name}' does not exist on sheet '{sheet_name}'")
                 
                 range_str = ws.tables[table_name].ref
             
-            # Filtrar los datos
+            # Filter the data
             filtered_data = filter_sheet_data(wb, sheet_name, range_str, filters)
             
             return {
                 "success": True,
                 "file_path": file_path,
                 "sheet_name": sheet_name,
-                "source": f"Tabla '{table_name}'" if table_name else f"Rango {range_str}",
+                "source": f"Table '{table_name}'" if table_name else f"Range {range_str}",
                 "filtered_data": filtered_data,
                 "record_count": len(filtered_data),
-                "message": f"Se encontraron {len(filtered_data)} registros que cumplen los criterios"
+                "message": f"Found {len(filtered_data)} records that meet the criteria"
             }
         except Exception as e:
             return {
                 "success": False,
                 "error": str(e),
-                "message": f"Error al filtrar datos: {e}"
+                "message": f"Error filtering data: {e}"
             }
 
-    @mcp.tool(description="Exporta un libro a PDF solo si tiene una única hoja visible")
+    @mcp.tool(description="Export a workbook to PDF only if it has a single visible sheet")
     def export_single_sheet_pdf_tool(excel_file, output_pdf=None):
         """Export an Excel file to PDF only if it has a single visible sheet."""
         return export_single_visible_sheet_pdf(excel_file, output_pdf)
 
-    @mcp.tool(description="Exporta una o varias hojas a PDF")
+    @mcp.tool(description="Export one or more sheets to PDF")
     def export_sheets_pdf_tool(excel_file, sheets=None, output_dir=None, single_file=False):
         """Export the specified sheets of an Excel workbook to PDF.
 
@@ -5364,5 +5364,5 @@ if HAS_MCP:
         return export_sheets_to_pdf(excel_file, sheets, output_dir, single_file)
 
 if __name__ == "__main__":
-    logger.info("Master Excel MCP - Ejemplo de uso")
-    logger.info("Este módulo unifica todas las funcionalidades Excel en un solo lugar.")
+    logger.info("Master Excel MCP - Usage example")
+    logger.info("This module brings together all Excel functionalities in one place.")
