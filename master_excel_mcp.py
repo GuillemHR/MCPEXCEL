@@ -953,6 +953,8 @@ def list_charts(wb: Any, sheet_name: str) -> List[Dict[str, Any]]:
 def write_sheet_data(ws: Any, start_cell: str, data: List[List[Any]]) -> None:
     """
     Escribe un array bidimensional de valores o fórmulas.
+    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+
 
     Para garantizar que la salida sea legible cuando la función es utilizada por
     un modelo de lenguaje se recomienda aplicar estilos tras la escritura y
@@ -1004,6 +1006,8 @@ def write_sheet_data(ws: Any, start_cell: str, data: List[List[Any]]) -> None:
 def append_rows(ws: Any, data: List[List[Any]]) -> None:
     """
     Añade filas al final con los valores dados.
+    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+
     
     Args:
         ws: Objeto worksheet de openpyxl
@@ -1029,6 +1033,8 @@ def append_rows(ws: Any, data: List[List[Any]]) -> None:
 def update_cell(ws: Any, cell: str, value_or_formula: Any) -> None:
     """
     Actualiza individualmente una celda.
+    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+
     
     Args:
         ws: Objeto worksheet de openpyxl
@@ -1344,6 +1350,8 @@ def add_chart(
     custom_palette=None,
 ) -> Tuple[int, Any]:
     """Inserta un gráfico nativo utilizando los datos del rango indicado.
+    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+
 
     ``data_range`` debe referirse a una tabla rectangular sin celdas vacías en
     la zona de valores. La primera fila o la primera columna se interpretan como
@@ -1623,6 +1631,8 @@ def create_sheet_with_data(wb: Any, sheet_name: str, data: List[List[Any]],
                           index: Optional[int] = None, overwrite: bool = False) -> Any:
     """
     Crea una nueva hoja y escribe datos en un solo paso.
+    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+
     
     Args:
         wb: Objeto workbook de openpyxl
@@ -1659,6 +1669,8 @@ def create_formatted_table(wb: Any, sheet_name: str, start_cell: str, data: List
                           formats: Optional[Dict[str, Union[str, Dict]]] = None) -> Tuple[Any, Any]:
     """
     Crea una tabla con formato en un solo paso.
+    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+
     
     Args:
         wb: Objeto workbook de openpyxl
@@ -1748,6 +1760,8 @@ def create_chart_from_table(
     use_headers: bool = True,
 ) -> Tuple[int, Any]:
     """Genera un gráfico a partir de una tabla existente.
+    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+
 
     La tabla debe contener encabezados válidos y no incluir filas de totales.
     Se asume que las celdas de datos forman un rango rectangular sin valores en
@@ -1811,6 +1825,8 @@ def create_chart_from_data(
     table_style: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Crea un gráfico a partir de ``data`` escribiendo primero los datos.
+    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+
 
     ``data`` debe ser una lista de listas con una estructura rectangular y sin
     celdas vacías. La primera fila o columna se interpreta como encabezados y
@@ -1917,6 +1933,8 @@ def create_chart_from_dataframe(
     table_style: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Genera un gráfico a partir de un ``DataFrame`` de pandas.
+    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+
 
     El ``DataFrame`` debe contener columnas numéricas sin valores faltantes en
     las series y no incluir filas de totales. Los encabezados se utilizan como
@@ -1967,6 +1985,8 @@ def create_report(wb: Any, data: Dict[str, List[List[Any]]], tables: Optional[Di
                  overwrite_sheets: bool = False) -> Dict[str, Any]:
     """
     Crea un informe completo con múltiples hojas, tablas y gráficos en un solo paso.
+    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+
 
     Esta función sirve como plantilla general para generadores automáticos de
     informes. Todas las hojas creadas deben quedar ordenadas y con estilos
@@ -2118,6 +2138,8 @@ def create_dashboard(wb: Any, dashboard_config: Dict[str, Any],
                     create_new: bool = True) -> Dict[str, Any]:
     """
     Crea un dashboard completo con tablas, gráficos y filtros interactivos.
+
+    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
 
     Está pensado para que un agente automático construya una hoja atractiva y
     sin solapamientos. Coloca cada gráfico dejando espacio respecto a tablas o
@@ -2359,8 +2381,11 @@ def create_dashboard(wb: Any, dashboard_config: Dict[str, Any],
 def apply_excel_template(wb: Any, template_name: str, data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Aplica una plantilla predefinida a un libro de Excel.
+    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+
     
     Args:
+
         wb: Objeto workbook de openpyxl
         template_name (str): Nombre de la plantilla a aplicar (ej. "informe_ventas", "dashboard")
         data: Diccionario con datos específicos para la plantilla
@@ -2707,6 +2732,8 @@ def update_report(wb: Any, report_config: Dict[str, Any],
                  recalculate: bool = True) -> Dict[str, Any]:
     """
     Actualiza un informe existente con nuevos datos.
+    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+
     
     Args:
         wb: Objeto workbook de openpyxl
@@ -3151,9 +3178,12 @@ def export_data(wb: Any, export_config: Dict[str, Any]) -> Dict[str, Any]:
 def create_report_from_template(template_file, output_file, data_mappings, chart_mappings=None, format_mappings=None):
     """
     Crea un informe basado en una plantilla Excel, sustituyendo datos, actualizando gráficos y aplicando formatos.
+    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+
     
     Args:
         template_file (str): Ruta a la plantilla Excel
+
         output_file (str): Ruta donde guardar el informe generado
         data_mappings (dict): Diccionario con mapeos de datos:
             {
@@ -3290,6 +3320,8 @@ def create_dynamic_dashboard(file_path, data, dashboard_config, overwrite=False)
     Crea un dashboard dinámico con múltiples visualizaciones en un solo paso.
 
     Los modelos que utilicen esta función deben procurar que las tablas y los
+    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+
     gráficos no se solapen. Es aconsejable dejar filas de separación y comprobar
     el ancho necesario de cada columna tras escribir los datos. Aplicar estilos
     coherentes ayuda a que el resultado sea más limpio y profesional.
@@ -3455,6 +3487,8 @@ def import_multi_source_data(excel_file, import_config, sheet_name=None, start_c
     """
     Importa datos desde múltiples fuentes (CSV, JSON, SQL) a un archivo Excel en un solo paso.
     
+    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+
     Args:
         excel_file (str): Ruta al archivo Excel donde importar los datos
         import_config (dict): Configuración de importación:
@@ -4814,6 +4848,8 @@ if HAS_MCP:
         Crea un archivo Excel con una hoja y datos en un solo paso.
         
         Args:
+            🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+
             file_path (str): Ruta al archivo Excel a crear
             sheet_name (str): Nombre de la hoja a crear
             data (list): Array bidimensional con los datos
@@ -4877,6 +4913,8 @@ if HAS_MCP:
         Crea una tabla formateada con datos en un solo paso.
         
         Args:
+            🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+
             file_path (str): Ruta al archivo Excel
             sheet_name (str): Nombre de la hoja
             start_cell (str): Celda inicial (ej. "A1")
@@ -4956,6 +4994,8 @@ if HAS_MCP:
         Crea un gráfico a partir de datos nuevos en un solo paso.
         
         Args:
+            🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+
             file_path (str): Ruta al archivo Excel
             sheet_name (str): Nombre de la hoja
             data (list): Array bidimensional con los datos para el gráfico
@@ -5042,6 +5082,8 @@ if HAS_MCP:
         Actualiza un informe existente con nuevos datos y configuraciones.
         
         Args:
+            🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+
             file_path (str): Ruta al archivo Excel a actualizar
             data_updates (dict): Diccionario con actualizaciones de datos:
                 {
@@ -5191,6 +5233,8 @@ if HAS_MCP:
         Crea un dashboard dinámico con múltiples visualizaciones en un solo paso.
         
         Args:
+            🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+
             file_path (str): Ruta al archivo Excel a crear
             data (dict): Diccionario con datos por hoja (ver documentación para formato)
             dashboard_config (dict): Configuración del dashboard (ver documentación para formato)
@@ -5207,6 +5251,8 @@ if HAS_MCP:
         Crea un informe basado en una plantilla Excel, sustituyendo datos y actualizando gráficos.
         
         Args:
+            🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+
             template_file (str): Ruta a la plantilla Excel
             output_file (str): Ruta donde guardar el informe generado
             data_mappings (dict): Diccionario con mapeos de datos (ver documentación para formato)
