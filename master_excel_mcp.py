@@ -1502,7 +1502,7 @@ def add_chart(
                     chart.set_categories(categories)
                 else:
                     if _range_has_blank(data_ws, min_row + 1, min_col, max_row, max_col):
-                        raise ChartError("El rango de datos contiene celdas vacías")
+                        raise ChartError("The data range contains blank cells")
                     categories = Reference(data_ws, min_row=min_row, max_row=min_row, min_col=min_col, max_col=max_col)
                     data = Reference(data_ws, min_row=min_row + 1, max_row=max_row, min_col=min_col, max_col=max_col)
                     try:
@@ -1512,54 +1512,54 @@ def add_chart(
                     chart.set_categories(categories)
             else:
                 if _range_has_blank(data_ws, min_row, min_col, max_row, max_col):
-                    raise ChartError("El rango de datos contiene celdas vacías")
+                    raise ChartError("The data range contains blank cells")
                 data_ref = Reference(data_ws, min_row=min_row, min_col=min_col, max_row=max_row, max_col=max_col)
                 chart.add_data(data_ref)
         
         except Exception as e:
-            raise RangeError(f"Error al procesar rango de datos '{data_range}': {e}")
+            raise RangeError(f"Error processing data range '{data_range}': {e}")
         
-        # Aplicar estilos
+        # Apply styles
         if style is not None:
-            # Convertir estilo especificado (número, nombre, etc.)
+            # Convert specified style (number, name, etc.)
             style_number = parse_chart_style(style)
             if style_number is not None:
-                # Aplicar el estilo incluyendo la paleta de colores
+                # Apply the style including the color palette
                 apply_chart_style(chart, style_number)
             else:
-                logger.warning(f"Estilo de gráfico inválido: '{style}'. Se usará estilo predeterminado.")
+                logger.warning(f"Invalid chart style: '{style}'. Using default style.")
         
-        # Aplicar tema de color si se proporciona
-        # (aquí usaríamos el tema, pero por simplicidad lo omitimos en esta implementación)
+        # Apply color theme if provided
+        # (here we would use the theme but omit it for simplicity)
         
-        # Aplicar paleta personalizada si se proporciona
+        # Apply custom palette if provided
         if custom_palette and isinstance(custom_palette, list):
             from openpyxl.chart.shapes import GraphicalProperties
             from openpyxl.drawing.fill import ColorChoice
             
             for i, series in enumerate(chart.series):
                 if i < len(custom_palette):
-                    # Asegurarse de que existen propiedades gráficas
+                    # Ensure graphical properties exist
                     if not hasattr(series, 'graphicalProperties'):
                         series.graphicalProperties = GraphicalProperties()
                     elif series.graphicalProperties is None:
                         series.graphicalProperties = GraphicalProperties()
                     
-                    # Asignar color asegurándonos de que no tiene el prefijo #
+                    # Assign color ensuring it doesn't have the # prefix
                     color = custom_palette[i]
                     if isinstance(color, str) and color.startswith('#'):
                         color = color[1:]
                     
-                    # Aplicar el color de forma explícita
+                    # Apply the color explicitly
                     series.graphicalProperties.solidFill = ColorChoice(srgbClr=color)
         
-        # Posicionar el gráfico en la hoja
+        # Position the chart on the sheet
         if position:
             ws.add_chart(chart, position)
         else:
             ws.add_chart(chart)
         
-        # Determinar el ID del gráfico (basado en su posición en la lista)
+        # Determine the chart ID (based on its position in the list)
         chart_id = len(ws._charts) - 1
         
         return chart_id, chart
@@ -1571,7 +1571,7 @@ def add_chart(
     except RangeError:
         raise
     except Exception as e:
-        raise ChartError(f"Error al crear gráfico: {e}")
+        raise ChartError(f"Error creating chart: {e}")
 
 def add_pivot_table(wb: Any, source_sheet: str, source_range: str, target_sheet: str,
                    target_cell: str, rows: List[str], cols: List[str], data_fields: List[str]) -> Any:
@@ -1595,72 +1595,72 @@ def add_pivot_table(wb: Any, source_sheet: str, source_range: str, target_sheet:
         PivotTableError: If there are issues with the pivot table.
     """
     if not wb:
-        raise ExcelMCPError("El workbook no puede ser None")
+        raise ExcelMCPError("Workbook cannot be None")
     
     try:
-        # Obtener hoja de origen
+        # Get source sheet
         source_ws = get_sheet(wb, source_sheet)
-        
-        # Obtener hoja de destino
+
+        # Get target sheet
         target_ws = get_sheet(wb, target_sheet)
-        
-        logger.warning("Las tablas dinámicas en openpyxl tienen funcionalidad limitada y pueden no funcionar como se espera.")
-        
-        # Intentar crear la caché de datos (este es un paso necesario)
+
+        logger.warning("Pivot tables in openpyxl have limited functionality and may not work as expected.")
+
+        # Try creating the data cache (this is a required step)
         try:
-            # Parsear el rango
+            # Parse the range
             min_row, min_col, max_row, max_col = ExcelRange.parse_range(source_range)
-            
-            # Ajustar a base 1 para Reference
+
+            # Adjust to 1-based for Reference
             min_row += 1
             min_col += 1
             max_row += 1
             max_col += 1
-            
-            # Crear referencia de datos para la caché
+
+            # Create data reference for the cache
             data_reference = Reference(source_ws, min_row=min_row, min_col=min_col,
                                      max_row=max_row, max_col=max_col)
-            
-            # Crear caché de pivot
+
+            # Create pivot cache
             pivot_cache = PivotCache(cacheSource=data_reference, cacheDefinition={'refreshOnLoad': True})
-            
-            # Generar un ID único para la tabla dinámica
+
+            # Generate a unique ID for the pivot table
             pivot_name = f"PivotTable{len(wb._pivots) + 1 if hasattr(wb, '_pivots') else 1}"
-            
-            # Crear la tabla dinámica
+
+            # Create the pivot table
             pivot_table = PivotTable(name=pivot_name, cache=pivot_cache,
                                     location=target_cell, rowGrandTotals=True, colGrandTotals=True)
-            
-            # Añadir campos de fila
+
+            # Add row fields
             for row_field in rows:
                 pivot_table.rowFields.append(PivotField(data=row_field))
-            
-            # Añadir campos de columna
+
+            # Add column fields
             for col_field in cols:
                 pivot_table.colFields.append(PivotField(data=col_field))
-            
-            # Añadir campos de datos
+
+            # Add data fields
             for data_field in data_fields:
                 pivot_table.dataFields.append(PivotField(data=data_field))
-            
-            # Añadir la tabla dinámica a la hoja de destino
+
+            # Add the pivot table to the target sheet
             target_ws.add_pivot_table(pivot_table)
             
             return pivot_table
             
         except Exception as pivot_error:
-            logger.error(f"Error al crear tabla dinámica: {pivot_error}")
-            raise PivotTableError(f"Error al crear tabla dinámica: {pivot_error}")
+            logger.error(f"Error creating pivot table: {pivot_error}")
+            raise PivotTableError(f"Error creating pivot table: {pivot_error}")
     
     except SheetNotFoundError:
         raise
     except PivotTableError:
         raise
     except Exception as e:
-        raise PivotTableError(f"Error al crear tabla dinámica: {e}")
+        raise PivotTableError(f"Error creating pivot table: {e}")
 
 # ----------------------------------------
-# NUEVAS FUNCIONES COMBINADAS DE ALTO NIVEL
+# NEW COMBINED HIGH-LEVEL FUNCTIONS
 # ----------------------------------------
 
 def create_sheet_with_data(wb: Any, sheet_name: str, data: List[List[Any]],
@@ -1682,18 +1682,18 @@ def create_sheet_with_data(wb: Any, sheet_name: str, data: List[List[Any]],
     Raises:
         SheetExistsError: If the sheet already exists and ``overwrite`` is ``False``.
     """
-    # Manejar caso de hoja existente
+    # Handle existing sheet case
     if sheet_name in list_sheets(wb):
         if overwrite:
-            # Eliminar la hoja existente
+            # Delete the existing sheet
             delete_sheet(wb, sheet_name)
         else:
-            raise SheetExistsError(f"La hoja '{sheet_name}' ya existe. Use overwrite=True para sobrescribirla.")
+            raise SheetExistsError(f"Sheet '{sheet_name}' already exists. Use overwrite=True to overwrite it.")
     
-    # Crear nueva hoja
+    # Create new sheet
     ws = add_sheet(wb, sheet_name, index)
     
-    # Escribir datos
+    # Write data
     if data:
         write_sheet_data(ws, "A1", data)
     
@@ -1727,59 +1727,59 @@ def create_formatted_table(wb: Any, sheet_name: str, start_cell: str, data: List
             "A1:Z1": {"bold": True, "fill_color": "DDEBF7"}  # Header style
         }
     """
-    # Obtener la hoja
+    # Get the sheet
     ws = get_sheet(wb, sheet_name)
     
-    # Obtener dimensiones del rango de datos
+    # Get data range dimensions
     rows = len(data)
     cols = max([len(row) if isinstance(row, list) else 1 for row in data], default=0)
     
-    # Escribir los datos
+    # Write the data
     write_sheet_data(ws, start_cell, data)
     
-    # Calcular el rango completo de la tabla
+    # Calculate the full table range
     start_row, start_col = ExcelRange.parse_cell_ref(start_cell)
     end_row = start_row + rows - 1
     end_col = start_col + cols - 1
     full_range = ExcelRange.range_to_a1(start_row, start_col, end_row, end_col)
     
-    # Crear la tabla
+    # Create the table
     table = add_table(ws, table_name, full_range, table_style)
     
-    # Aplicar formatos adicionales si se proporcionan
+    # Apply additional formats if provided
     if formats:
         for range_str, format_value in formats.items():
-            # Convertir rango relativo a absoluto si es necesario
+            # Convert relative range to absolute if needed
             if not any(c in range_str for c in [':', '!']):
-                # Es una sola celda, añadir offset
+                # It's a single cell, add offset
                 cell_row, cell_col = ExcelRange.parse_cell_ref(range_str)
                 abs_row = start_row + cell_row
                 abs_col = start_col + cell_col
                 abs_range = ExcelRange.cell_to_a1(abs_row, abs_col)
             elif ':' in range_str and '!' not in range_str:
-                # Es un rango sin hoja específica, añadir offset
+                # Range without a specific sheet, add offset
                 range_start, range_end = range_str.split(':')
                 start_row_rel, start_col_rel = ExcelRange.parse_cell_ref(range_start)
                 end_row_rel, end_col_rel = ExcelRange.parse_cell_ref(range_end)
-                
-                # Calcular posiciones absolutas
+
+                # Calculate absolute positions
                 abs_start_row = start_row + start_row_rel
                 abs_start_col = start_col + start_col_rel
                 abs_end_row = start_row + end_row_rel
                 abs_end_col = start_col + end_col_rel
-                
-                # Crear rango absoluto
+
+                # Create absolute range
                 abs_range = ExcelRange.range_to_a1(abs_start_row, abs_start_col, abs_end_row, abs_end_col)
             else:
-                # Ya es un rango absoluto o con hoja específica
+                # It's already an absolute range or includes the sheet
                 abs_range = range_str
-            
-            # Aplicar formato según tipo
+
+            # Apply format according to type
             if isinstance(format_value, str):
-                # Es un formato numérico
+                # It's a number format
                 apply_number_format(ws, abs_range, format_value)
             elif isinstance(format_value, dict):
-                # Es un diccionario de estilos
+                # It's a style dictionary
                 apply_style(ws, abs_range, format_value)
     
     return table, ws
@@ -1820,10 +1820,10 @@ def create_chart_from_table(
     Returns:
         Tuple ``(chart ID, chart object)``.
     """
-    # Obtener la hoja
+    # Get the sheet
     ws = get_sheet(wb, sheet_name)
     
-    # Obtener información de la tabla
+    # Get table information
     tables = list_tables(wb, sheet_name)
     table_info = None
     for table in tables:
@@ -1832,12 +1832,12 @@ def create_chart_from_table(
             break
     
     if not table_info:
-        raise TableError(f"No se encontró la tabla '{table_name}' en la hoja '{sheet_name}'")
+        raise TableError(f"Table '{table_name}' not found in sheet '{sheet_name}'")
     
-    # Usar el rango de la tabla para crear el gráfico
+    # Use the table range to create the chart
     table_range = table_info['ref']
     
-    # Crear el gráfico
+    # Create the chart
     chart_id, chart = add_chart(wb, sheet_name, chart_type, table_range, 
                                title, position, style)
     
@@ -1884,21 +1884,21 @@ def create_chart_from_data(
     Returns:
         Dictionary with information about the chart and, if created, the table.
     """
-    # Crear hoja si no existe
+    # Create sheet if it does not exist
     if sheet_name not in list_sheets(wb):
         add_sheet(wb, sheet_name)
     
-    # Obtener la hoja
+    # Get the sheet
     ws = get_sheet(wb, sheet_name)
     
-    # Determinar una ubicación adecuada para los datos
-    # Por defecto, colocar los datos en A1
+    # Determine a suitable location for the data
+    # By default, place the data at A1
     data_start_cell = "A1"
     
-    # Escribir los datos
+    # Write the data
     write_sheet_data(ws, data_start_cell, data)
     
-    # Calcular el rango completo de los datos
+    # Calculate the full data range
     rows = len(data)
     cols = max([len(row) if isinstance(row, list) else 1 for row in data], default=0)
     start_row, start_col = ExcelRange.parse_cell_ref(data_start_cell)
@@ -1912,11 +1912,11 @@ def create_chart_from_data(
         "columns": cols
     }
     
-    # Crear tabla si se solicita
+    # Create table if requested
     if create_table:
         if not table_name:
-            # Generar nombre de tabla si no se proporciona
-            table_name = f"Tabla_{sheet_name}_{int(time.time())}"
+            # Generate table name if not provided
+            table_name = f"Table_{sheet_name}_{int(time.time())}"
             
         try:
             table = add_table(ws, table_name, data_range, table_style)
@@ -1926,9 +1926,9 @@ def create_chart_from_data(
                 "style": table_style
             }
         except Exception as e:
-            logger.warning(f"No se pudo crear la tabla: {e}")
+            logger.warning(f"Could not create the table: {e}")
     
-    # Crear el gráfico
+    # Create the chart
     try:
         chart_id, chart = add_chart(wb, sheet_name, chart_type, data_range, 
                                   title, position, style)
@@ -1941,8 +1941,8 @@ def create_chart_from_data(
             "style": style
         }
     except Exception as e:
-        logger.error(f"Error al crear gráfico: {e}")
-        raise ChartError(f"Error al crear gráfico: {e}")
+        logger.error(f"Error creating chart: {e}")
+        raise ChartError(f"Error creating chart: {e}")
 
     return result
 
@@ -1984,9 +1984,9 @@ def create_chart_from_dataframe(
     """
 
     if df is None:
-        raise ExcelMCPError("El DataFrame proporcionado es None")
+        raise ExcelMCPError("The provided DataFrame is None")
 
-    # Convertir el DataFrame a lista de listas incluyendo encabezados
+    # Convert the DataFrame to a list of lists including headers
     data = [df.columns.tolist()] + df.values.tolist()
 
     return create_chart_from_data(
@@ -2037,16 +2037,16 @@ def create_report(wb: Any, data: Dict[str, List[List[Any]]], tables: Optional[Di
         "charts": []
     }
     
-    # Crear/actualizar hojas con datos
+    # Create/update sheets with data
     for sheet_name, sheet_data in data.items():
         if sheet_name in list_sheets(wb):
             if overwrite_sheets:
-                # Usar la hoja existente
+                # Use the existing sheet
                 ws = wb[sheet_name]
-                # Escribir los datos
+                # Write the data
                 write_sheet_data(ws, "A1", sheet_data)
             else:
-                # Añadir sufijo numérico si la hoja ya existe
+                # Add numeric suffix if the sheet already exists
                 base_name = sheet_name
                 counter = 1
                 while f"{base_name}_{counter}" in list_sheets(wb):
@@ -2055,12 +2055,12 @@ def create_report(wb: Any, data: Dict[str, List[List[Any]]], tables: Optional[Di
                 ws = create_sheet_with_data(wb, new_name, sheet_data)
                 sheet_name = new_name
         else:
-            # Crear nueva hoja
+            # Create new sheet
             ws = create_sheet_with_data(wb, sheet_name, sheet_data)
         
         result["sheets"].append({"name": sheet_name, "rows": len(sheet_data)})
         
-        # Aplicar formatos específicos para esta hoja
+        # Apply specific formats for this sheet
         if formats and sheet_name in formats:
             for range_str, format_value in formats[sheet_name].items():
                 if isinstance(format_value, str):
@@ -2076,13 +2076,13 @@ def create_report(wb: Any, data: Dict[str, List[List[Any]]], tables: Optional[Di
             style = table_config.get("style")
             
             if not sheet_name or not range_str:
-                logger.warning(f"Configuración incompleta para tabla '{table_name}'. Se requiere sheet y range.")
+                logger.warning(f"Incomplete configuration for table '{table_name}'. Sheet and range are required.")
                 continue
             
             try:
-                # Verificar que la hoja existe
+                # Verify that the sheet exists
                 if sheet_name not in list_sheets(wb):
-                    logger.warning(f"Hoja '{sheet_name}' no encontrada para la tabla '{table_name}'. Omitiendo.")
+                    logger.warning(f"Sheet '{sheet_name}' not found for table '{table_name}'. Skipping.")
                     continue
                 
                 ws = wb[sheet_name]
@@ -2095,7 +2095,7 @@ def create_report(wb: Any, data: Dict[str, List[List[Any]]], tables: Optional[Di
                     "style": style
                 })
                 
-                # Aplicar formatos específicos para esta tabla
+                # Apply specific formats for this table
                 if "formats" in table_config:
                     for range_str, format_value in table_config["formats"].items():
                         if isinstance(format_value, str):
@@ -2106,7 +2106,7 @@ def create_report(wb: Any, data: Dict[str, List[List[Any]]], tables: Optional[Di
             except Exception as e:
                 logger.warning(f"Error al crear tabla '{table_name}': {e}")
     
-    # Crear gráficos
+    # Create charts
     if charts:
         for chart_name, chart_config in charts.items():
             sheet_name = chart_config.get("sheet")
@@ -2117,13 +2117,13 @@ def create_report(wb: Any, data: Dict[str, List[List[Any]]], tables: Optional[Di
             style = chart_config.get("style")
             
             if not sheet_name or not chart_type or not data_source:
-                logger.warning(f"Configuración incompleta para gráfico '{chart_name}'. Se requiere sheet, type y data.")
+                logger.warning(f"Incomplete configuration for chart '{chart_name}'. Sheet, type and data are required.")
                 continue
             
             try:
                 # Verificar que la hoja existe
                 if sheet_name not in list_sheets(wb):
-                    logger.warning(f"Hoja '{sheet_name}' no encontrada para el gráfico '{chart_name}'. Omitiendo.")
+                    logger.warning(f"Sheet '{sheet_name}' not found for chart '{chart_name}'. Skipping.")
                     continue
                 
                 # Determinar si data_source es una tabla o un rango
@@ -2135,7 +2135,7 @@ def create_report(wb: Any, data: Dict[str, List[List[Any]]], tables: Optional[Di
                             data_range = table["range"]
                             break
                 
-                # Crear el gráfico
+                # Create the chart
                 chart_id, chart = add_chart(wb, sheet_name, chart_type, data_range, 
                                            title, position, style)
                 
@@ -2150,7 +2150,7 @@ def create_report(wb: Any, data: Dict[str, List[List[Any]]], tables: Optional[Di
                 })
             
             except Exception as e:
-                logger.warning(f"Error al crear gráfico '{chart_name}': {e}")
+                logger.warning(f"Error creating chart '{chart_name}': {e}")
     
     return result
 
@@ -2198,7 +2198,7 @@ def create_dashboard(wb: Any, dashboard_config: Dict[str, Any],
     Returns:
         Dictionary with information about the created elements.
     """
-    # Configuración básica
+    # Basic configuration
     title = dashboard_config.get("title", "Dashboard")
     sheet_name = dashboard_config.get("sheet", "Dashboard")
     data_sheet = dashboard_config.get("data_sheet")
@@ -2213,7 +2213,7 @@ def create_dashboard(wb: Any, dashboard_config: Dict[str, Any],
     # Crear o usar la hoja del dashboard
     if sheet_name in list_sheets(wb):
         if create_new:
-            # Añadir sufijo numérico
+            # Add numeric suffix
             base_name = sheet_name
             counter = 1
             while f"{base_name}_{counter}" in list_sheets(wb):
@@ -2233,8 +2233,8 @@ def create_dashboard(wb: Any, dashboard_config: Dict[str, Any],
         if data_sheet in list_sheets(wb):
             # Usar la hoja existente
             data_ws = wb[data_sheet]
-            # Limpiar datos existentes
-            # (Esto podría mejorarse para no borrar todo)
+            # Clear existing data
+            # (This could be improved to avoid deleting everything)
             max_row = data_ws.max_row
             max_col = data_ws.max_column
             for row in range(1, max_row + 1):
@@ -2248,7 +2248,7 @@ def create_dashboard(wb: Any, dashboard_config: Dict[str, Any],
         write_sheet_data(data_ws, "A1", data)
         result["data_sheet"] = data_sheet
     
-    # Añadir título al dashboard
+    # Add title to the dashboard
     update_cell(ws, "A1", title)
     apply_style(ws, "A1", {
         "font_size": 16,
@@ -2258,23 +2258,23 @@ def create_dashboard(wb: Any, dashboard_config: Dict[str, Any],
     
 
     
-    # Espacio después del título
+    # Space after the title
     current_row = 3
     
-    # Procesar secciones del dashboard
+    # Process dashboard sections
     sections = dashboard_config.get("sections", [])
     for i, section in enumerate(sections):
         section_type = section.get("type")
-        section_title = section.get("title", f"Sección {i+1}")
+        section_title = section.get("title", f"Section {i+1}")
         
-        # Información para el resultado
+        # Information for the result
         section_result = {
             "title": section_title,
             "type": section_type,
             "row": current_row
         }
         
-        # Añadir título de sección
+        # Add section title
         update_cell(ws, f"A{current_row}", section_title)
         apply_style(ws, f"A{current_row}", {
             "font_size": 12,
@@ -2282,12 +2282,12 @@ def create_dashboard(wb: Any, dashboard_config: Dict[str, Any],
         })
         current_row += 1
         
-        # Procesar según el tipo de sección
+        # Process according to the section type
         if section_type == "chart":
             chart_type = section.get("chart_type", "column")
             data_range = section.get("data_range")
             
-            # Si el rango no tiene hoja específica, usar la hoja de datos
+            # If the range has no specific sheet, use the data sheet
             if data_range and '!' not in data_range and data_sheet:
                 if ' ' in data_sheet or any(c in data_sheet for c in "![]{}?"):
                     data_range = f"'{data_sheet}'!{data_range}"
@@ -2305,19 +2305,19 @@ def create_dashboard(wb: Any, dashboard_config: Dict[str, Any],
                 section_result["chart_id"] = chart_id
                 section_result["data_range"] = data_range
                 
-                # Avanzar filas según la posición y tamaño estimado del gráfico
-                # (esto es una estimación simple)
+                # Move down rows according to position and estimated chart size
+                # (this is a simple estimate)
                 current_row += 15
             except Exception as e:
-                logger.warning(f"Error al crear gráfico en sección '{section_title}': {e}")
-                current_row += 2  # Avanzar unas pocas filas en caso de error
+                logger.warning(f"Error creating chart in section '{section_title}': {e}")
+                current_row += 2  # Move down a few rows in case of error
         
         elif section_type == "table":
             table_range = section.get("data_range")
-            table_name = section.get("name", f"Tabla_{i}")
+            table_name = section.get("name", f"Table_{i}")
             table_style = section.get("style")
             
-            # Si el rango no tiene hoja específica, usar la hoja de datos
+            # If the range has no specific sheet, use the data sheet
             if table_range and '!' not in table_range and data_sheet:
                 if ' ' in data_sheet or any(c in data_sheet for c in "![]{}?"):
                     full_table_range = f"'{data_sheet}'!{table_range}"
@@ -2327,26 +2327,26 @@ def create_dashboard(wb: Any, dashboard_config: Dict[str, Any],
                 full_table_range = table_range
                 
             try:
-                # Extraer datos de la tabla para mostrarlos en el dashboard
+                # Extract table data to display on the dashboard
                 if data_sheet:
                     source_ws = wb[data_sheet]
-                    # Extraer rango sin nombre de hoja
+                    # Extract range without sheet name
                     if '!' in table_range:
                         pure_range = table_range.split('!')[1]
                     else:
                         pure_range = table_range
                     
-                    # Leer datos de la fuente
+                    # Read data from the source
                     table_data = read_sheet_data(wb, data_sheet, pure_range)
                     
-                    # Determinar dimensiones
+                    # Determine dimensions
                     table_rows = len(table_data)
                     table_cols = max([len(row) if isinstance(row, list) else 1 for row in table_data], default=0)
                     
-                    # Escribir datos en el dashboard
+                    # Write data on the dashboard
                     write_sheet_data(ws, f"A{current_row}", table_data)
                     
-                    # Crear tabla local en el dashboard
+                    # Create local table on the dashboard
                     local_range = f"A{current_row}:{get_column_letter(table_cols)}:{current_row + table_rows - 1}"
                     table = add_table(ws, table_name, local_range, table_style)
                     
@@ -2354,7 +2354,7 @@ def create_dashboard(wb: Any, dashboard_config: Dict[str, Any],
                     section_result["source_range"] = full_table_range
                     section_result["dashboard_range"] = local_range
                     
-                    # Avanzar filas según tamaño de tabla
+                    # Move down rows according to table size
                     current_row += table_rows + 2
                 else:
                     # Si no hay hoja de datos, crear tabla directamente en el dashboard
@@ -2368,9 +2368,9 @@ def create_dashboard(wb: Any, dashboard_config: Dict[str, Any],
                         min_row, min_col, max_row, max_col = ExcelRange.parse_range(table_range)
                         current_row += (max_row - min_row) + 3
                     except:
-                        current_row += 10  # Valor por defecto si falla el cálculo
+                        current_row += 10  # Default value if calculation fails
             except Exception as e:
-                logger.warning(f"Error al crear tabla en sección '{section_title}': {e}")
+                logger.warning(f"Error creating table in section '{section_title}': {e}")
                 current_row += 2
         
         elif section_type == "text":
@@ -2389,10 +2389,10 @@ def create_dashboard(wb: Any, dashboard_config: Dict[str, Any],
             
             current_row += 2
         
-        # Añadir la sección al resultado
+        # Add the section to the result
         result["sections"].append(section_result)
         
-        # Espacio entre secciones
+        # Space between sections
         current_row += 1
     
     return result
@@ -2422,13 +2422,13 @@ def apply_excel_template(wb: Any, template_name: str, data: Dict[str, Any]) -> D
         "elements": []
     }
     
-    # Implementación de plantillas predefinidas
+    # Implementation of predefined templates
     if template_name == "basic_report":
-        # Plantilla de informe básico
-        title = data.get("title", "Informe Básico")
+        # Basic report template
+        title = data.get("title", "Basic Report")
         subtitle = data.get("subtitle", "")
         report_date = data.get("date", time.strftime("%d/%m/%Y"))
-        sheet_name = data.get("sheet", "Informe")
+        sheet_name = data.get("sheet", "Report")
         report_data = data.get("data", [])
         
         # Crear hoja para el informe si no existe
@@ -2437,7 +2437,7 @@ def apply_excel_template(wb: Any, template_name: str, data: Dict[str, Any]) -> D
         else:
             ws = wb[sheet_name]
         
-        # Título e información básica
+        # Title and basic information
         update_cell(ws, "A1", title)
         apply_style(ws, "A1", {
             "font_size": 16,
@@ -2465,7 +2465,7 @@ def apply_excel_template(wb: Any, template_name: str, data: Dict[str, Any]) -> D
             
             # Crear tabla
             table_range = f"A{start_row}:{get_column_letter(cols)}{start_row + rows - 1}"
-            table_name = data.get("table_name", "TablaInforme")
+            table_name = data.get("table_name", "ReportTable")
             table_style = data.get("table_style", "TableStyleMedium9")
             
             try:
@@ -2478,10 +2478,10 @@ def apply_excel_template(wb: Any, template_name: str, data: Dict[str, Any]) -> D
             except Exception as e:
                 logger.warning(f"Error al crear tabla: {e}")
             
-            # Crear gráfico
+            # Create chart
             chart_type = data.get("chart_type", "column")
             chart_position = data.get("chart_position", f"G{start_row}")
-            chart_title = data.get("chart_title", "Gráfico del Informe")
+            chart_title = data.get("chart_title", "Report Chart")
             chart_style = data.get("chart_style", "colorful-1")
             
             try:
@@ -2494,34 +2494,34 @@ def apply_excel_template(wb: Any, template_name: str, data: Dict[str, Any]) -> D
                     "position": chart_position
                 })
             except Exception as e:
-                logger.warning(f"Error al crear gráfico: {e}")
+                logger.warning(f"Error creating chart: {e}")
         
         result["sheets"].append({"name": sheet_name, "type": "report"})
     
     elif template_name == "financial_dashboard":
-        # Template más avanzado para dashboard financiero
-        title = data.get("title", "Dashboard Financiero")
+        # More advanced template for a financial dashboard
+        title = data.get("title", "Financial Dashboard")
         sheet_name = data.get("sheet", "Dashboard")
         financial_data = data.get("financial_data", {})
         
-        # Configuración para crear el dashboard completo
+        # Configuration to create the full dashboard
         dashboard_config = {
             "title": title,
             "sheet": sheet_name,
             "sections": []
         }
         
-        # 1. Sección de KPIs financieros
+        # 1. Financial KPI section
         if "kpis" in financial_data:
             kpis = financial_data["kpis"]
             kpi_section = {
-                "title": "Indicadores Financieros Clave",
+                "title": "Key Financial Indicators",
                 "type": "text",
-                "content": "KPIs Financieros"
+                "content": "Financial KPIs"
             }
             dashboard_config["sections"].append(kpi_section)
-            
-            # Cada KPI se podría añadir como texto o celda con formato
+
+            # Each KPI could be added as text or a formatted cell
             for kpi_name, kpi_value in kpis.items():
                 kpi_section = {
                     "title": kpi_name,
@@ -2534,11 +2534,11 @@ def apply_excel_template(wb: Any, template_name: str, data: Dict[str, Any]) -> D
                 }
                 dashboard_config["sections"].append(kpi_section)
         
-        # 2. Sección de gráficos financieros
+        # 2. Financial charts section
         if "charts" in financial_data:
             for chart_config in financial_data["charts"]:
                 chart_section = {
-                    "title": chart_config.get("title", "Gráfico Financiero"),
+                    "title": chart_config.get("title", "Financial Chart"),
                     "type": "chart",
                     "chart_type": chart_config.get("type", "column"),
                     "data_range": chart_config.get("data_range", ""),
@@ -2547,30 +2547,30 @@ def apply_excel_template(wb: Any, template_name: str, data: Dict[str, Any]) -> D
                 }
                 dashboard_config["sections"].append(chart_section)
         
-        # 3. Sección de tablas de datos
+        # 3. Data tables section
         if "tables" in financial_data:
             for table_config in financial_data["tables"]:
                 table_section = {
-                    "title": table_config.get("title", "Tabla Financiera"),
+                    "title": table_config.get("title", "Financial Table"),
                     "type": "table",
                     "data_range": table_config.get("data_range", ""),
-                    "name": table_config.get("name", "TablaFinanzas"),
+                    "name": table_config.get("name", "FinanceTable"),
                     "style": table_config.get("style", "TableStyleMedium9")
                 }
                 dashboard_config["sections"].append(table_section)
         
-        # Crear el dashboard
+        # Create the dashboard
         dashboard_result = create_dashboard(wb, dashboard_config)
         
-        # Añadir resultado
+        # Add result
         result["sheets"].append({"name": sheet_name, "type": "dashboard"})
         result["dashboard"] = dashboard_result
     
     elif template_name == "sales_analysis":
-        # Template para análisis de ventas
-        title = data.get("title", "Análisis de Ventas")
+        # Template for sales analysis
+        title = data.get("title", "Sales Analysis")
         sheet_data = data.get("sales_data", [])
-        sheet_name = data.get("sheet", "Ventas")
+        sheet_name = data.get("sheet", "Sales")
         
         # Crear hoja de datos si no existe
         data_sheet = f"{sheet_name}_Datos"
@@ -2589,23 +2589,23 @@ def apply_excel_template(wb: Any, template_name: str, data: Dict[str, Any]) -> D
             data_range = f"A1:{get_column_letter(cols)}{rows}"
             
             try:
-                table = add_table(data_ws, "TablaDatosVentas", data_range, "TableStyleMedium9")
+                table = add_table(data_ws, "SalesDataTable", data_range, "TableStyleMedium9")
                 result["elements"].append({
                     "type": "table",
-                    "name": "TablaDatosVentas",
+                    "name": "SalesDataTable",
                     "sheet": data_sheet,
                     "range": data_range
                 })
             except Exception as e:
                 logger.warning(f"Error al crear tabla de datos: {e}")
         
-        # Crear hoja de análisis
+        # Create analysis sheet
         if sheet_name not in list_sheets(wb):
             ws = add_sheet(wb, sheet_name)
         else:
             ws = wb[sheet_name]
         
-        # Título del análisis
+        # Analysis title
         update_cell(ws, "A1", title)
         apply_style(ws, "A1", {
             "font_size": 16,
@@ -2615,81 +2615,81 @@ def apply_excel_template(wb: Any, template_name: str, data: Dict[str, Any]) -> D
         
 
             
-        # Crear secciones de análisis según la estructura de los datos
+        # Create analysis sections according to the data structure
         current_row = 3
         
-        # 1. Ventas por Región (suponiendo que hay una columna de región)
-        update_cell(ws, f"A{current_row}", "Ventas por Región")
+        # 1. Sales by Region (assuming there is a region column)
+        update_cell(ws, f"A{current_row}", "Sales by Region")
         apply_style(ws, f"A{current_row}", {"bold": True, "font_size": 12})
         current_row += 1
         
         try:
-            # Crear gráfico para ventas por región
-            chart_id, chart = add_chart(wb, sheet_name, "column", 
-                                       f"{data_sheet}!A1:{get_column_letter(cols)}{rows}", 
-                                       "Ventas por Región", f"A{current_row}", "colorful-1")
+            # Create chart for sales by region
+            chart_id, chart = add_chart(wb, sheet_name, "column",
+                                       f"{data_sheet}!A1:{get_column_letter(cols)}{rows}",
+                                       "Sales by Region", f"A{current_row}", "colorful-1")
             
             result["elements"].append({
                 "type": "chart",
-                "name": "GraficoVentasRegion",
+                "name": "SalesByRegionChart",
                 "sheet": sheet_name,
                 "id": chart_id
             })
             
-            current_row += 15  # Espacio para el gráfico
+            current_row += 15  # Space for the chart
         except Exception as e:
-            logger.warning(f"Error al crear gráfico de ventas por región: {e}")
+            logger.warning(f"Error creating sales by region chart: {e}")
             current_row += 2
         
-        # 2. Tendencia de Ventas (si hay datos temporales)
-        update_cell(ws, f"A{current_row}", "Tendencia de Ventas")
+        # 2. Sales Trend (if there is time data)
+        update_cell(ws, f"A{current_row}", "Sales Trend")
         apply_style(ws, f"A{current_row}", {"bold": True, "font_size": 12})
         current_row += 1
         
         try:
-            # Crear gráfico para tendencia de ventas
-            chart_id, chart = add_chart(wb, sheet_name, "line", 
-                                       f"{data_sheet}!A1:{get_column_letter(cols)}{rows}", 
-                                       "Tendencia de Ventas", f"A{current_row}", "line-markers")
+            # Create chart for sales trend
+            chart_id, chart = add_chart(wb, sheet_name, "line",
+                                       f"{data_sheet}!A1:{get_column_letter(cols)}{rows}",
+                                       "Sales Trend", f"A{current_row}", "line-markers")
             
             result["elements"].append({
                 "type": "chart",
-                "name": "GraficoTendenciaVentas",
+                "name": "SalesTrendChart",
                 "sheet": sheet_name,
                 "id": chart_id
             })
             
-            current_row += 15  # Espacio para el gráfico
+            current_row += 15  # Space for the chart
         except Exception as e:
-            logger.warning(f"Error al crear gráfico de tendencia de ventas: {e}")
+            logger.warning(f"Error creating sales trend chart: {e}")
             current_row += 2
         
         result["sheets"].append({"name": sheet_name, "type": "analysis"})
         result["sheets"].append({"name": data_sheet, "type": "data"})
         
     elif template_name == "project_tracker":
-        # Template para seguimiento de proyectos
-        title = data.get("title", "Seguimiento de Proyectos")
+        # Template for project tracking
+        title = data.get("title", "Project Tracking")
         projects = data.get("projects", [])
-        sheet_name = data.get("sheet", "Proyectos")
+        sheet_name = data.get("sheet", "Projects")
         
-        # Preparar datos de proyectos
+        # Prepare project data
         if not projects:
-            # Crear datos de ejemplo si no se proporcionan
+            # Create sample data if none is provided
             projects = [
-                ["ID", "Proyecto", "Responsable", "Inicio", "Plazo", "Estado", "Avance"],
-                ["P001", "Proyecto A", "Juan Pérez", "01/01/2023", "30/06/2023", "En curso", 75],
-                ["P002", "Proyecto B", "Ana López", "15/02/2023", "31/07/2023", "En curso", 40],
-                ["P003", "Proyecto C", "Carlos Ruiz", "01/03/2023", "31/08/2023", "Retrasado", 20]
+                ["ID", "Project", "Owner", "Start", "Deadline", "Status", "Progress"],
+                ["P001", "Project A", "Juan Pérez", "01/01/2023", "30/06/2023", "In progress", 75],
+                ["P002", "Project B", "Ana López", "15/02/2023", "31/07/2023", "In progress", 40],
+                ["P003", "Project C", "Carlos Ruiz", "01/03/2023", "31/08/2023", "Delayed", 20]
             ]
         
-        # Crear hoja para proyectos si no existe
+        # Create sheet for projects if it does not exist
         if sheet_name not in list_sheets(wb):
             ws = add_sheet(wb, sheet_name)
         else:
             ws = wb[sheet_name]
         
-        # Título del tracker
+        # Tracker title
         update_cell(ws, "A1", title)
         apply_style(ws, "A1", {
             "font_size": 16,
@@ -2699,7 +2699,7 @@ def apply_excel_template(wb: Any, template_name: str, data: Dict[str, Any]) -> D
         
 
         
-        # Escribir datos de proyectos
+        # Write project data
         write_sheet_data(ws, "A3", projects)
         
         # Crear tabla para los datos
@@ -2708,34 +2708,34 @@ def apply_excel_template(wb: Any, template_name: str, data: Dict[str, Any]) -> D
         table_range = f"A3:{get_column_letter(cols)}{rows+2}"
         
         try:
-            table = add_table(ws, "TablaProyectos", table_range, "TableStyleMedium9")
+            table = add_table(ws, "ProjectsTable", table_range, "TableStyleMedium9")
             result["elements"].append({
                 "type": "table",
-                "name": "TablaProyectos",
+                "name": "ProjectsTable",
                 "sheet": sheet_name,
                 "range": table_range
             })
             
-            # Aplicar formato porcentual a la columna de avance
+            # Apply percentage format to the progress column
             avance_col = get_column_letter(cols)
             apply_number_format(ws, f"{avance_col}4:{avance_col}{rows+2}", "0%")
         except Exception as e:
             logger.warning(f"Error al crear tabla de proyectos: {e}")
         
-        # Crear gráfico de avance
+        # Create progress chart
         try:
-            chart_id, chart = add_chart(wb, sheet_name, "column", 
-                                       table_range, 
-                                       "Avance de Proyectos", "I3", "colorful-3")
+            chart_id, chart = add_chart(wb, sheet_name, "column",
+                                       table_range,
+                                       "Project Progress", "I3", "colorful-3")
             
             result["elements"].append({
                 "type": "chart",
-                "name": "GraficoAvance",
+                "name": "ProgressChart",
                 "sheet": sheet_name,
                 "id": chart_id
             })
         except Exception as e:
-            logger.warning(f"Error al crear gráfico de avance: {e}")
+            logger.warning(f"Error creating progress chart: {e}")
         
         result["sheets"].append({"name": sheet_name, "type": "tracker"})
     
@@ -2778,7 +2778,7 @@ def update_report(wb: Any, report_config: Dict[str, Any],
     data_updates = report_config.get("data_updates", {})
     for sheet_name, update_info in data_updates.items():
         if sheet_name not in list_sheets(wb):
-            logger.warning(f"Hoja '{sheet_name}' no encontrada. Omitiendo actualización.")
+            logger.warning(f"Sheet '{sheet_name}' not found. Skipping update.")
             continue
         
         ws = wb[sheet_name]
@@ -2786,7 +2786,7 @@ def update_report(wb: Any, report_config: Dict[str, Any],
         data = update_info.get("data")
         
         if not range_str or not data:
-            logger.warning(f"Configuración incompleta para actualizar hoja '{sheet_name}'. Se requiere range y data.")
+            logger.warning(f"Incomplete configuration to update sheet '{sheet_name}'. Range and data are required.")
             continue
         
         try:
@@ -2814,11 +2814,11 @@ def update_report(wb: Any, report_config: Dict[str, Any],
         new_range = table_info.get("new_range")
         
         if not sheet_name or not table_name:
-            logger.warning("Información de tabla incompleta. Se requiere sheet y name.")
+            logger.warning("Incomplete table information. Sheet and name are required.")
             continue
         
         if sheet_name not in list_sheets(wb):
-            logger.warning(f"Hoja '{sheet_name}' no encontrada. Omitiendo actualización de tabla.")
+            logger.warning(f"Sheet '{sheet_name}' not found. Skipping table update.")
             continue
         
         ws = wb[sheet_name]
@@ -2826,13 +2826,13 @@ def update_report(wb: Any, report_config: Dict[str, Any],
         try:
             # Verificar si la tabla existe
             if not hasattr(ws, 'tables') or table_name not in ws.tables:
-                logger.warning(f"Tabla '{table_name}' no encontrada en hoja '{sheet_name}'.")
+                logger.warning(f"Table '{table_name}' not found in sheet '{sheet_name}'.")
                 continue
             
-            # Obtener referencia actual
+            # Get current reference
             current_range = ws.tables[table_name].ref
             
-            # Actualizar rango si se proporciona uno nuevo
+            # Update range if a new one is provided
             if new_range:
                 ws.tables[table_name].ref = new_range
                 
@@ -2849,16 +2849,16 @@ def update_report(wb: Any, report_config: Dict[str, Any],
                     "refreshed": True
                 })
         except Exception as e:
-            logger.warning(f"Error al actualizar tabla '{table_name}': {e}")
+            logger.warning(f"Error updating table '{table_name}': {e}")
     
-    # Recalcular fórmulas si se solicita
+    # Recalculate formulas if requested
     if recalculate:
-        # En OpenPyXL no hay una funcionalidad directa para recalcular fórmulas
-        # Esta es una función de placeholder que podría implementarse en versiones futuras
-        # o mediante la API COM de Excel si está disponible
-        result["recalculation_note"] = "Recalcular fórmulas en OpenPyXL es limitado"
+        # OpenPyXL does not directly recalculate formulas
+        # This is a placeholder that could be implemented in future versions
+        # or via Excel's COM API if available
+        result["recalculation_note"] = "Formula recalculation in OpenPyXL is limited"
     
-    # Actualizar gráficos
+    # Update charts
     refresh_charts = report_config.get("refresh_charts", [])
     for chart_info in refresh_charts:
         sheet_name = chart_info.get("sheet")
@@ -2866,31 +2866,31 @@ def update_report(wb: Any, report_config: Dict[str, Any],
         new_data_range = chart_info.get("new_data_range")
         
         if not sheet_name or chart_id is None:
-            logger.warning("Información de gráfico incompleta. Se requiere sheet y id.")
+            logger.warning("Incomplete chart information. Sheet and id are required.")
             continue
         
         if sheet_name not in list_sheets(wb):
-            logger.warning(f"Hoja '{sheet_name}' no encontrada. Omitiendo actualización de gráfico.")
+            logger.warning(f"Sheet '{sheet_name}' not found. Skipping chart update.")
             continue
         
         ws = wb[sheet_name]
         
         try:
-            # Verificar si el gráfico existe
+            # Verify if the chart exists
             if not hasattr(ws, '_charts') or chart_id >= len(ws._charts) or chart_id < 0:
-                logger.warning(f"Gráfico con ID {chart_id} no encontrado en hoja '{sheet_name}'.")
+                logger.warning(f"Chart with ID {chart_id} not found in sheet '{sheet_name}'.")
                 continue
             
-            # En OpenPyXL, actualizar un gráfico no es tan directo
-            # Una opción sería eliminar el gráfico y crear uno nuevo
+            # In OpenPyXL updating a chart is not straightforward
+            # One option is to delete the chart and create a new one
             if new_data_range:
-                # Obtener propiedades del gráfico actual
+                # Get current chart properties
                 chart_rel = ws._charts[chart_id]
                 chart = chart_rel[0]
                 position = chart_rel[1] if len(chart_rel) > 1 else None
                 
-                # Determinar el tipo de gráfico
-                chart_type = "column"  # Valor por defecto
+                # Determine chart type
+                chart_type = "column"  # Default value
                 if isinstance(chart, BarChart):
                     chart_type = "bar" if chart.type == "bar" else "column"
                 elif isinstance(chart, LineChart):
@@ -2902,13 +2902,13 @@ def update_report(wb: Any, report_config: Dict[str, Any],
                 elif isinstance(chart, AreaChart):
                     chart_type = "area"
                 
-                # Obtener título si existe
+                # Get title if it exists
                 title = chart.title if hasattr(chart, 'title') and chart.title else None
                 
-                # Eliminar el gráfico viejo
+                # Delete the old chart
                 del ws._charts[chart_id]
                 
-                # Crear un nuevo gráfico con los mismos parámetros pero nuevo rango
+                # Create a new chart with the same parameters but new range
                 new_chart_id, new_chart = add_chart(wb, sheet_name, chart_type, new_data_range,
                                                  title, position)
                 
@@ -2916,18 +2916,18 @@ def update_report(wb: Any, report_config: Dict[str, Any],
                     "id": chart_id,
                     "new_id": new_chart_id,
                     "sheet": sheet_name,
-                    "old_data_range": "unknown",  # No hay forma fácil de obtener el rango original
+                    "old_data_range": "unknown",  # No easy way to get the original range
                     "new_data_range": new_data_range
                 })
             else:
-                # Sin nuevo rango, no se puede actualizar fácilmente
+                # Without a new range it cannot be easily updated
                 result["updated_charts"].append({
                     "id": chart_id,
                     "sheet": sheet_name,
-                    "note": "No se proporcionó nuevo rango. La actualización real de datos requiere Excel COM."
+                    "note": "No new range provided. Updating data requires Excel COM."
                 })
         except Exception as e:
-            logger.warning(f"Error al actualizar gráfico {chart_id}: {e}")
+            logger.warning(f"Error updating chart {chart_id}: {e}")
     
     return result
 
@@ -2962,16 +2962,16 @@ def import_data(wb: Any, import_config: Dict[str, Any]) -> Dict[str, Any]:
     
     source_type = import_config.get("source", "").lower()
     source_path = import_config.get("source_path")
-    sheet_name = import_config.get("sheet", "Datos")
+    sheet_name = import_config.get("sheet", "Data")
     start_cell = import_config.get("start_cell", "A1")
     options = import_config.get("options", {})
     
     if not source_path:
-        logger.warning("No se especificó una ruta de origen para importar datos.")
-        result["error"] = "No se especificó una ruta de origen"
+        logger.warning("No source path specified for importing data.")
+        result["error"] = "No source path specified"
         return result
         
-    # Crear la hoja si no existe
+    # Create the sheet if it does not exist
     if sheet_name not in list_sheets(wb):
         ws = add_sheet(wb, sheet_name)
     else:
@@ -2990,7 +2990,7 @@ def import_data(wb: Any, import_config: Dict[str, Any]) -> Dict[str, Any]:
                 for row in csv_reader:
                     data.append(row)
             
-            # Escribir los datos
+            # Write the data
             write_sheet_data(ws, start_cell, data)
             
             result["imported_rows"] = len(data)
