@@ -1117,7 +1117,7 @@ def update_cell(ws: Any, cell: str, value_or_formula: Any) -> None:
         raise ExcelMCPError(f"Error al actualizar celda: {e}")
 
 def autofit_table(ws: Any, cell_range: str) -> None:
-    """Ajusta ancho de columnas y alto de filas para un rango tabular."""
+    """Adjust column widths and row heights for a tabular range."""
     start_row, start_col, end_row, end_col = ExcelRange.parse_range(cell_range)
 
     col_widths: Dict[int, int] = {}
@@ -1155,22 +1155,22 @@ def autofit_table(ws: Any, cell_range: str) -> None:
 
 def apply_style(ws: Any, cell_range: str, style_dict: Dict[str, Any]) -> None:
     """
-    Aplica estilos de celda a un rango.
-    
+    Apply cell styles to a range.
+
     Args:
-        ws: Objeto worksheet de openpyxl
-        cell_range (str): Rango en formato A1:B5, o una sola celda (e.j. "A1")
-        style_dict (dict): Diccionario con estilos a aplicar:
-            - font_name (str): Nombre de la fuente
-            - font_size (int): Tamaño de la fuente
-            - bold (bool): Negrita
-            - italic (bool): Cursiva
-            - fill_color (str): Color de fondo (formato hex: "FF0000")
-            - border_style (str): Estilo de borde ('thin', 'medium', 'thick', etc.)
-            - alignment (str): Alineación ('center', 'left', 'right', etc.)
-            
+        ws: Openpyxl worksheet object.
+        cell_range (str): Range in ``A1:B5`` format or a single cell like ``"A1"``.
+        style_dict (dict): Dictionary with styles to apply:
+            - font_name (str): Font name.
+            - font_size (int): Font size.
+            - bold (bool): Bold text.
+            - italic (bool): Italic text.
+            - fill_color (str): Background color in hex, e.g. ``"FF0000"``.
+            - border_style (str): Border style (``"thin"``, ``"medium"``, ``"thick"``, etc.).
+            - alignment (str): Alignment (``"center"``, ``"left"``, ``"right"``, etc.).
+
     Raises:
-        RangeError: Si el rango es inválido
+        RangeError: If the range is invalid.
     """
     if not ws:
         raise ExcelMCPError("El worksheet no puede ser None")
@@ -1241,15 +1241,15 @@ def apply_style(ws: Any, cell_range: str, style_dict: Dict[str, Any]) -> None:
 
 def apply_number_format(ws: Any, cell_range: str, fmt: str) -> None:
     """
-    Aplica formato numérico a un rango de celdas.
-    
+    Apply a number format to a range of cells.
+
     Args:
-        ws: Objeto worksheet de openpyxl
-        cell_range (str): Rango en formato A1:B5, o una sola celda (e.j. "A1")
-        fmt (str): Formato numérico ("#,##0.00", "0%", "dd/mm/yyyy", etc.)
-        
+        ws: Openpyxl worksheet object.
+        cell_range (str): Range in ``A1:B5`` format or a single cell like ``"A1"``.
+        fmt (str): Number format (``"#,##0.00"``, ``"0%"``, ``"dd/mm/yyyy"``, etc.).
+
     Raises:
-        RangeError: Si el rango es inválido
+        RangeError: If the range is invalid.
     """
     if not ws:
         raise ExcelMCPError("El worksheet no puede ser None")
@@ -1279,19 +1279,19 @@ def apply_number_format(ws: Any, cell_range: str, fmt: str) -> None:
 # 4. Tablas y fórmulas (de advanced_excel_mcp.py)
 def add_table(ws: Any, table_name: str, cell_range: str, style=None) -> Any:
     """
-    Define un rango como Tabla con estilo.
-    
+    Define a range as a styled table.
+
     Args:
-        ws: Objeto worksheet de openpyxl
-        table_name (str): Nombre único para la tabla
-        cell_range (str): Rango en formato A1:B5
-        style (str, opcional): Nombre de estilo predefinido o dict personalizado
-        
+        ws: Openpyxl worksheet object.
+        table_name (str): Unique name for the table.
+        cell_range (str): Range in ``A1:B5`` format.
+        style (str, optional): Predefined style name or a custom dict.
+
     Returns:
-        Objeto Table creado
-        
+        The created :class:`Table` object.
+
     Raises:
-        TableError: Si hay un problema con la tabla (ej. nombre duplicado)
+        TableError: If there is a problem with the table, e.g. duplicate name.
     """
     if not ws:
         raise ExcelMCPError("El worksheet no puede ser None")
@@ -1343,18 +1343,18 @@ def add_table(ws: Any, table_name: str, cell_range: str, style=None) -> Any:
 
 def set_formula(ws: Any, cell: str, formula: str) -> Any:
     """
-    Establece una fórmula en una celda.
-    
+    Set a formula in a cell.
+
     Args:
-        ws: Objeto worksheet de openpyxl
-        cell (str): Referencia de celda (ej. "A1")
-        formula (str): Fórmula Excel, con o sin signo =
-        
+        ws: Openpyxl worksheet object.
+        cell (str): Cell reference (e.g. ``"A1"``).
+        formula (str): Excel formula, with or without the ``=`` sign.
+
     Returns:
-        Celda actualizada
-        
+        The updated cell.
+
     Raises:
-        FormulaError: Si hay un problema con la fórmula
+        FormulaError: If there is a problem with the formula.
     """
     if not ws:
         raise ExcelMCPError("El worksheet no puede ser None")
@@ -1385,39 +1385,36 @@ def add_chart(
     theme=None,
     custom_palette=None,
 ) -> Tuple[int, Any]:
-    """Inserta un gráfico nativo utilizando los datos del rango indicado.
-    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+    """Insert a native chart using the data from the given range.
+    🔒 **Emojis must never be included in text written to cells, labels, titles or charts.**
 
+    ``data_range`` should reference a rectangular table with no blank cells in
+    the value area. The first row or first column is interpreted as headers and
+    categories according to :func:`determine_orientation`. All series must
+    contain only numbers and be the same length as the category vector. If total
+    rows or mixed columns exist, the chart may be created incorrectly.
 
-    ``data_range`` debe referirse a una tabla rectangular sin celdas vacías en
-    la zona de valores. La primera fila o la primera columna se interpretan como
-    encabezados y categorías, según determine_orientation. Todas las series deben
-    contener únicamente números y tener la misma longitud que el vector de
-    categorías. Si existen filas de totales o columnas mezcladas, el gráfico
-    podría crearse de forma incorrecta.
-
-    Valida previamente que el rango pertenezca a la hoja correcta y que los
-    encabezados estén presentes, ya que las series se añaden con
-    ``titles_from_data=True``. Las categorías no deben contener valores en blanco
-    ni duplicados, y las columnas numéricas no pueden incluir texto.
+    Validate beforehand that the range belongs to the correct sheet and that
+    headers are present, since the series are added with
+    ``titles_from_data=True``. Categories must not contain blank or duplicate
+    values and numeric columns must not contain text.
 
     Args:
-        wb: Objeto ``Workbook`` de openpyxl.
-        sheet_name: Nombre de la hoja donde insertar el gráfico.
-        chart_type: Tipo de gráfico (``'column'``, ``'bar'``, ``'line'``,
-            ``'pie'``, etc.).
-        data_range: Rango de datos en formato ``A1:B5``.
-        title: Título opcional del gráfico.
-        position: Celda donde colocar el gráfico (por ejemplo ``"E5"``).
-        style: Estilo del gráfico (número ``1``–``48`` o nombre descriptivo).
-        theme: Nombre del tema de color.
-        custom_palette: Lista de colores personalizados.
+        wb: Openpyxl ``Workbook`` object.
+        sheet_name: Name of the sheet where the chart will be inserted.
+        chart_type: Chart type (``'column'``, ``'bar'``, ``'line'``, ``'pie'``, etc.).
+        data_range: Data range in ``A1:B5`` format.
+        title: Optional chart title.
+        position: Cell where the chart will be placed (e.g. ``"E5"``).
+        style: Chart style (number ``1``–``48`` or descriptive name).
+        theme: Name of the color theme.
+        custom_palette: List of custom colors.
 
     Returns:
-        Tupla ``(id del gráfico, objeto chart)``.
+        Tuple ``(chart id, chart object)``.
 
     Raises:
-        ChartError: Si ocurre un problema al crear el gráfico.
+        ChartError: If a problem occurs while creating the chart.
     """
     if not wb:
         raise ExcelMCPError("El workbook no puede ser None")
@@ -1576,26 +1573,26 @@ def add_chart(
     except Exception as e:
         raise ChartError(f"Error al crear gráfico: {e}")
 
-def add_pivot_table(wb: Any, source_sheet: str, source_range: str, target_sheet: str, 
+def add_pivot_table(wb: Any, source_sheet: str, source_range: str, target_sheet: str,
                    target_cell: str, rows: List[str], cols: List[str], data_fields: List[str]) -> Any:
     """
-    Crea una tabla dinámica.
-    
+    Create a pivot table.
+
     Args:
-        wb: Objeto workbook de openpyxl
-        source_sheet (str): Hoja con datos fuente
-        source_range (str): Rango de datos fuente (A1:E10)
-        target_sheet (str): Hoja donde crear la tabla dinámica
-        target_cell (str): Celda de anclaje (ej. "A1")
-        rows (list): Campos para filas
-        cols (list): Campos para columnas
-        data_fields (list): Campos para valores y funciones
-        
+        wb: Openpyxl workbook object.
+        source_sheet (str): Sheet containing the source data.
+        source_range (str): Range of source data (e.g. ``A1:E10``).
+        target_sheet (str): Sheet where the pivot table will be created.
+        target_cell (str): Anchor cell (e.g. ``"A1"``).
+        rows (list): Row fields.
+        cols (list): Column fields.
+        data_fields (list): Value fields and functions.
+
     Returns:
-        Objeto PivotTable creado
-        
+        The created :class:`PivotTable` object.
+
     Raises:
-        PivotTableError: Si hay problemas con la tabla dinámica
+        PivotTableError: If there are issues with the pivot table.
     """
     if not wb:
         raise ExcelMCPError("El workbook no puede ser None")
@@ -1666,25 +1663,24 @@ def add_pivot_table(wb: Any, source_sheet: str, source_range: str, target_sheet:
 # NUEVAS FUNCIONES COMBINADAS DE ALTO NIVEL
 # ----------------------------------------
 
-def create_sheet_with_data(wb: Any, sheet_name: str, data: List[List[Any]], 
-                          index: Optional[int] = None, overwrite: bool = False) -> Any:
+def create_sheet_with_data(wb: Any, sheet_name: str, data: List[List[Any]],
+                           index: Optional[int] = None, overwrite: bool = False) -> Any:
     """
-    Crea una nueva hoja y escribe datos en un solo paso.
-    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+    Create a new sheet and write data in a single step.
+    🔒 **Emojis must never be included in text written to cells, labels, titles or charts.**
 
-    
     Args:
-        wb: Objeto workbook de openpyxl
-        sheet_name (str): Nombre para la nueva hoja
-        data (List[List]): Datos a escribir
-        index (int, opcional): Posición de la hoja en el libro
-        overwrite (bool): Si True, sobrescribe una hoja existente con el mismo nombre
-        
+        wb: Openpyxl workbook object.
+        sheet_name (str): Name for the new sheet.
+        data (List[List]): Data to write.
+        index (int, optional): Position of the sheet in the workbook.
+        overwrite (bool): If ``True`` overwrite an existing sheet with the same name.
+
     Returns:
-        Objeto worksheet creado
-        
+        The created worksheet object.
+
     Raises:
-        SheetExistsError: Si la hoja ya existe y overwrite=False
+        SheetExistsError: If the sheet already exists and ``overwrite`` is ``False``.
     """
     # Manejar caso de hoja existente
     if sheet_name in list_sheets(wb):
@@ -1703,32 +1699,32 @@ def create_sheet_with_data(wb: Any, sheet_name: str, data: List[List[Any]],
     
     return ws
 
-def create_formatted_table(wb: Any, sheet_name: str, start_cell: str, data: List[List[Any]], 
-                          table_name: str, table_style: Optional[str] = None, 
-                          formats: Optional[Dict[str, Union[str, Dict]]] = None) -> Tuple[Any, Any]:
+def create_formatted_table(wb: Any, sheet_name: str, start_cell: str, data: List[List[Any]],
+                            table_name: str, table_style: Optional[str] = None,
+                            formats: Optional[Dict[str, Union[str, Dict]]] = None) -> Tuple[Any, Any]:
     """
-    Crea una tabla con formato en un solo paso.
-    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+    Create a formatted table in a single step.
+    🔒 **Emojis must never be included in text written to cells, labels, titles or charts.**
 
-    
     Args:
-        wb: Objeto workbook de openpyxl
-        sheet_name (str): Nombre de la hoja donde crear la tabla
-        start_cell (str): Celda inicial para los datos (ej. "A1")
-        data (List[List]): Datos para la tabla, incluyendo encabezados
-        table_name (str): Nombre único para la tabla
-        table_style (str, opcional): Estilo predefinido para la tabla (ej. "TableStyleMedium9")
-        formats (dict, opcional): Diccionario de formatos a aplicar:
-            - Claves: Rangos relativos (ej. "A2:A10") o celdas
-            - Valores: Formato de número o diccionario de estilos 
-            
+        wb: Openpyxl workbook object.
+        sheet_name (str): Name of the sheet where the table will be created.
+        start_cell (str): Starting cell for the data (e.g. ``"A1"``).
+        data (List[List]): Data for the table including headers.
+        table_name (str): Unique name for the table.
+        table_style (str, optional): Predefined table style (e.g. ``"TableStyleMedium9"``).
+        formats (dict, optional): Dictionary of formats to apply:
+            - Keys: Relative ranges (e.g. ``"A2:A10"``) or cells.
+            - Values: Number format or a style dictionary.
+
     Returns:
-        Tupla (objeto tabla, worksheet)
+        Tuple ``(table object, worksheet)``.
+
+    Example format::
         
-    Ejemplo de formato:
         formats = {
-            "B2:B10": "#,##0.00",  # Formato de moneda
-            "A1:Z1": {"bold": True, "fill_color": "DDEBF7"}  # Estilo de encabezado
+            "B2:B10": "#,##0.00",  # Currency format
+            "A1:Z1": {"bold": True, "fill_color": "DDEBF7"}  # Header style
         }
     """
     # Obtener la hoja
@@ -1798,35 +1794,31 @@ def create_chart_from_table(
     style: Optional[Any] = None,
     use_headers: bool = True,
 ) -> Tuple[int, Any]:
-    """Genera un gráfico a partir de una tabla existente.
-    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+    """Generate a chart from an existing table.
+    🔒 **Emojis must never be included in text written to cells, labels, titles or charts.**
 
+    The table must contain valid headers and must not include total rows. Data
+    cells are assumed to form a rectangular range with no blanks. When
+    ``use_headers`` is ``True`` the first row of the table is used as series
+    titles and categories. All data columns must be numeric and the same length
+    to avoid errors when creating the chart.
 
-    La tabla debe contener encabezados válidos y no incluir filas de totales.
-    Se asume que las celdas de datos forman un rango rectangular sin valores en
-    blanco. Cuando ``use_headers`` es ``True`` la primera fila de la tabla se
-    toma como títulos de las series y como categorías. Todas las columnas de
-    datos deben ser numéricas y de igual longitud para evitar errores al crear
-    el gráfico.
-
-    Revisa que la tabla no contenga celdas vacías ni columnas de texto donde se
-    esperan números. Cualquier discrepancia en la longitud de las series o en la
-    cantidad de categorías puede provocar gráficos incompletos o vacíos.
+    Ensure the table has no blank cells or text columns where numbers are
+    expected. Any mismatch in series length or category count can lead to
+    incomplete or empty charts.
 
     Args:
-        wb: Objeto ``Workbook`` de openpyxl.
-        sheet_name: Nombre de la hoja donde está la tabla.
-        table_name: Nombre de la tabla a utilizar como origen.
-        chart_type: Tipo de gráfico (``'column'``, ``'bar'``, ``'line'``, ``'pie'``,
-            etc.).
-        title: Título opcional del gráfico.
-        position: Celda de anclaje para el gráfico.
-        style: Estilo del gráfico (número ``1``–``48`` o nombre descriptivo).
-        use_headers: Si ``True`` toma la primera fila como encabezados y
-            categorías.
+        wb: Openpyxl ``Workbook`` object.
+        sheet_name: Name of the sheet containing the table.
+        table_name: Name of the table used as the source.
+        chart_type: Chart type (``'column'``, ``'bar'``, ``'line'``, ``'pie'``, etc.).
+        title: Optional chart title.
+        position: Anchor cell for the chart.
+        style: Chart style (number ``1``–``48`` or descriptive name).
+        use_headers: If ``True`` use the first row as headers and categories.
 
     Returns:
-        Tupla ``(ID del gráfico, objeto gráfico)``.
+        Tuple ``(chart ID, chart object)``.
     """
     # Obtener la hoja
     ws = get_sheet(wb, sheet_name)
@@ -1863,39 +1855,34 @@ def create_chart_from_data(
     table_name: Optional[str] = None,
     table_style: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Crea un gráfico a partir de ``data`` escribiendo primero los datos.
-    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+    """Create a chart from ``data`` by writing the values first.
+    🔒 **Emojis must never be included in text written to cells, labels, titles or charts.**
 
+    ``data`` must be a list of lists forming a rectangular structure with no
+    empty cells. The first row or column is interpreted as headers and
+    categories; therefore every row must have the same length and numeric columns
+    should not contain text. Avoid including total rows or records that should
+    not be charted.
 
-    ``data`` debe ser una lista de listas con una estructura rectangular y sin
-    celdas vacías. La primera fila o columna se interpreta como encabezados y
-    categorías; por ello todas las filas deben tener la misma longitud y las
-    columnas numéricas no deben contener texto. Evita incluir filas de totales o
-    registros que no deban graficarse.
-
-    Antes de llamar a la función verifica que no existan celdas en blanco,
-    encabezados duplicados ni longitudes desiguales entre categorías y series.
-    ``add_chart`` utilizará ``titles_from_data=True`` para asignar los nombres de
-    serie. Si las series no son coherentes, el gráfico resultante podría quedar
-    incompleto o mostrar errores.
+    Before calling the function check for blank cells, duplicated headers or
+    mismatched lengths between categories and series. ``add_chart`` uses
+    ``titles_from_data=True`` to assign the series names. If the series are
+    inconsistent the resulting chart may be incomplete or show errors.
 
     Args:
-        wb: Objeto ``Workbook`` de openpyxl.
-        sheet_name: Nombre de la hoja donde crear el gráfico.
-        data: Matriz de datos que incluye los encabezados.
-        chart_type: Tipo de gráfico (``'column'``, ``'bar'``, ``'line'``,
-            ``'pie'``, etc.).
-        position: Celda donde colocar el gráfico.
-        title: Título del gráfico.
-        style: Estilo del gráfico (número ``1``–``48`` o nombre descriptivo).
-        create_table: Si ``True`` crea una tabla con los datos escritos.
-        table_name: Nombre de la tabla (obligatorio si ``create_table`` es
-            ``True``).
-        table_style: Estilo opcional para la tabla.
+        wb: Openpyxl ``Workbook`` object.
+        sheet_name: Name of the sheet where the chart will be created.
+        data: Data matrix including the headers.
+        chart_type: Chart type (``'column'``, ``'bar'``, ``'line'``, ``'pie'``, etc.).
+        position: Cell where to place the chart.
+        title: Chart title.
+        style: Chart style (number ``1``–``48`` or descriptive name).
+        create_table: If ``True`` a table with the written data will be created.
+        table_name: Name of the table (required if ``create_table`` is ``True``).
+        table_style: Optional table style.
 
     Returns:
-        Diccionario con información del gráfico y, en su caso, de la tabla
-        creada.
+        Dictionary with information about the chart and, if created, the table.
     """
     # Crear hoja si no existe
     if sheet_name not in list_sheets(wb):
@@ -1971,33 +1958,29 @@ def create_chart_from_dataframe(
     table_name: Optional[str] = None,
     table_style: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Genera un gráfico a partir de un ``DataFrame`` de pandas.
-    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+    """Generate a chart from a ``pandas.DataFrame``.
+    🔒 **Emojis must never be included in text written to cells, labels, titles or charts.**
 
-
-    El ``DataFrame`` debe contener columnas numéricas sin valores faltantes en
-    las series y no incluir filas de totales. Los encabezados se utilizan como
-    títulos de las series, por lo que es importante que no haya duplicados ni
-    celdas en blanco. El contenido del ``DataFrame`` se escribe en la hoja y se
-    delega a :func:`create_chart_from_data`, por lo que aplican las mismas
-    recomendaciones sobre validación previa.
+    The ``DataFrame`` must contain numeric columns without missing values in the
+    series and should not include total rows. The headers are used as series
+    titles, so duplicates or blank cells should be avoided. The contents of the
+    ``DataFrame`` are written to the sheet and delegated to
+    :func:`create_chart_from_data`, therefore the same validation rules apply.
 
     Args:
-        wb: Objeto ``Workbook`` de openpyxl.
-        sheet_name: Nombre de la hoja donde crear el gráfico.
-        df: Datos en formato ``pandas.DataFrame``.
-        chart_type: Tipo de gráfico (``'column'``, ``'bar'``, ``'line'``,
-            ``'pie'``, etc.).
-        position: Celda de anclaje para el gráfico.
-        title: Título del gráfico.
-        style: Estilo opcional del gráfico.
-        create_table: Si ``True`` crea una tabla con los datos escritos.
-        table_name: Nombre de la tabla a crear.
-        table_style: Estilo de la tabla.
+        wb: Openpyxl ``Workbook`` object.
+        sheet_name: Name of the sheet where the chart will be created.
+        df: Data in ``pandas.DataFrame`` format.
+        chart_type: Chart type (``'column'``, ``'bar'``, ``'line'``, ``'pie'``, etc.).
+        position: Anchor cell for the chart.
+        title: Chart title.
+        style: Optional chart style.
+        create_table: If ``True`` create a table with the written data.
+        table_name: Name of the table to create.
+        table_style: Table style.
 
     Returns:
-        Diccionario con información del gráfico y, en su caso, de la tabla
-        generada.
+        Dictionary with information about the chart and, if created, the table.
     """
 
     if df is None:
@@ -2023,32 +2006,30 @@ def create_report(wb: Any, data: Dict[str, List[List[Any]]], tables: Optional[Di
                  charts: Optional[Dict[str, Dict[str, Any]]] = None, formats: Optional[Dict[str, Dict[str, Any]]] = None,
                  overwrite_sheets: bool = False) -> Dict[str, Any]:
     """
-    Crea un informe completo con múltiples hojas, tablas y gráficos en un solo paso.
-    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+    Create a full report with multiple sheets, tables and charts in a single step.
+    🔒 **Emojis must never be included in text written to cells, labels, titles or charts.**
 
-
-    Esta función sirve como plantilla general para generadores automáticos de
-    informes. Todas las hojas creadas deben quedar ordenadas y con estilos
-    aplicados. Se recomienda verificar el espacio libre antes de insertar
-    gráficos para que no queden encima de ninguna tabla o bloque de texto. Tras
-    crear una tabla, comprueba qué columna tiene cadenas más largas y ajusta su
-    ancho para que el contenido sea visible sin necesidad de editar manualmente
-    el archivo.
+    This function acts as a generic template for automated report generators.
+    All created sheets should be orderly and styled. Check the available space
+    before inserting charts so they do not end up on top of any table or block
+    of text. After creating a table, verify which column contains the longest
+    strings and adjust its width so the content is visible without manual
+    editing.
 
     Args:
-        wb: Objeto workbook de openpyxl
-        data: Diccionario con datos por hoja: {"Hoja1": [[datos]], "Hoja2": [[datos]]}
-        tables: Diccionario de configuración de tablas:
-            {"TablaVentas": {"sheet": "Ventas", "range": "A1:B10", "style": "TableStyleMedium9"}}
-        charts: Diccionario de configuración de gráficos:
-            {"GraficoVentas": {"sheet": "Ventas", "type": "column", "data": "TablaVentas", 
-                              "title": "Ventas", "position": "D2", "style": "dark-blue"}}
-        formats: Diccionario de formatos a aplicar:
-            {"Ventas": {"B2:B10": "#,##0.00", "A1:Z1": {"bold": True}}}
-        overwrite_sheets: Si True, sobrescribe hojas existentes
-        
+        wb: Openpyxl workbook object.
+        data: Dictionary with data per sheet: ``{"Sheet1": [[data]], "Sheet2": [[data]]}``
+        tables: Dictionary with table configuration:
+            ``{"SalesTable": {"sheet": "Sales", "range": "A1:B10", "style": "TableStyleMedium9"}}``
+        charts: Dictionary with chart configuration:
+            ``{"SalesChart": {"sheet": "Sales", "type": "column", "data": "SalesTable",
+                              "title": "Sales", "position": "D2", "style": "dark-blue"}}``
+        formats: Dictionary of formats to apply:
+            ``{"Sales": {"B2:B10": "#,##0.00", "A1:Z1": {"bold": True}}}``
+        overwrite_sheets: If ``True`` overwrite existing sheets.
+
     Returns:
-        Diccionario con información de los elementos creados
+        Dictionary with information about the created elements.
     """
     result = {
         "sheets": [],
@@ -2176,20 +2157,19 @@ def create_report(wb: Any, data: Dict[str, List[List[Any]]], tables: Optional[Di
 def create_dashboard(wb: Any, dashboard_config: Dict[str, Any],
                     create_new: bool = True) -> Dict[str, Any]:
     """
-    Crea un dashboard completo con tablas, gráficos y filtros interactivos.
+    Create a complete dashboard with tables, charts and interactive filters.
 
-    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+    🔒 **Emojis must never be included in text written to cells, labels, titles or charts.**
 
-    Está pensado para que un agente automático construya una hoja atractiva y
-    sin solapamientos. Coloca cada gráfico dejando espacio respecto a tablas o
-    textos previos. Tras escribir los datos de cada sección revisa el tamaño de
-    las columnas y amplíalas cuando alguna celda sea especialmente larga. De esa
-    forma se garantiza que la lectura sea cómoda sin modificar manualmente el
-    archivo.
+    It is intended for an automated agent to build an attractive sheet without
+    overlaps. Each chart should be placed with space from previous tables or
+    text. After writing the data for each section check the column widths and
+    enlarge them when some cell is particularly long so the sheet remains easy
+    to read without manual editing.
 
     Args:
-        wb: Objeto workbook de openpyxl
-        dashboard_config: Diccionario con configuración completa del dashboard
+        wb: Openpyxl workbook object.
+        dashboard_config: Dictionary with the complete dashboard configuration
             {
                 "title": "Dashboard de Ventas",
                 "sheet": "Dashboard",
@@ -2213,10 +2193,10 @@ def create_dashboard(wb: Any, dashboard_config: Dict[str, Any],
                     }
                 ]
             }
-        create_new: Si True, crea una nueva hoja para el dashboard
-        
+        create_new: If ``True`` create a new sheet for the dashboard.
+
     Returns:
-        Diccionario con información de los elementos creados
+        Dictionary with information about the created elements.
     """
     # Configuración básica
     title = dashboard_config.get("title", "Dashboard")
