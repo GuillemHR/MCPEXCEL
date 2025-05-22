@@ -61,10 +61,10 @@ try:
     from mcp.server.fastmcp import FastMCP
     HAS_MCP = True
 except ImportError:
-    logger.warning("No se pudo importar FastMCP. Las funcionalidades de servidor MCP no estarán disponibles.")
+    logger.warning("FastMCP could not be imported. MCP server features will be unavailable.")
     HAS_MCP = False
 
-# Intentar importar las bibliotecas necesarias
+# Attempt to import required libraries
 try:
     import pandas as pd
     import numpy as np
@@ -84,8 +84,8 @@ try:
     from openpyxl.pivot.cache import PivotCache
     HAS_OPENPYXL = True
 except ImportError as e:
-    logger.warning(f"Error al importar bibliotecas esenciales: {e}")
-    logger.warning("Es posible que algunas funcionalidades no estén disponibles")
+    logger.warning(f"Failed to import required libraries: {e}")
+    logger.warning("Some functionality may be unavailable")
     HAS_OPENPYXL = False
 
 # Import existing Excel MCP modules
@@ -139,11 +139,10 @@ class PivotTableError(ExcelMCPError):
 
 # Common utilities 
 class ExcelRange:
-    """
-    Clase para manipular y convertir rangos de Excel.
-    
-    Esta clase proporciona métodos para convertir entre notación de Excel (A1:B5)
-    y coordenadas de Python (0-based), además de validar rangos.
+    """Utility class for manipulating and converting Excel ranges.
+
+    This class offers helpers to convert between Excel notation (A1:B5) and
+    zero-based Python coordinates, as well as utilities for validating ranges.
     """
     
     @staticmethod
@@ -163,21 +162,21 @@ class ExcelRange:
         if not cell_ref or not isinstance(cell_ref, str):
             raise ValueError(f"Referencia de celda inválida: {cell_ref}")
         
-        # Extraer la parte de columna (letras)
+        # Extract the column portion (letters)
         col_str = ''.join(c for c in cell_ref if c.isalpha())
-        # Extraer la parte de fila (números)
+        # Extract the row portion (numbers)
         row_str = ''.join(c for c in cell_ref if c.isdigit())
         
         if not col_str or not row_str:
             raise ValueError(f"Formato de celda inválido: {cell_ref}")
         
-        # Convertir columna a índice (A->0, B->1, etc.)
+        # Convert column letters to an index (A->0, B->1, etc.)
         col_idx = 0
         for c in col_str.upper():
             col_idx = col_idx * 26 + (ord(c) - ord('A') + 1)
-        col_idx -= 1  # Ajustar a base 0
-        
-        # Convertir fila a índice (base 0)
+        col_idx -= 1  # Adjust to zero-based index
+
+        # Convert row number to zero-based index
         row_idx = int(row_str) - 1
         
         return row_idx, col_idx
@@ -199,20 +198,20 @@ class ExcelRange:
         if not range_str or not isinstance(range_str, str):
             raise ValueError(f"Rango inválido: {range_str}")
         
-        # Manejar rangos con referencia a hoja
+        # Handle ranges that include a sheet reference
         if '!' in range_str:
             parts = range_str.split('!')
             if len(parts) != 2:
                 raise ValueError(f"Formato de rango con hoja inválido: {range_str}")
-            range_str = parts[1]  # Usar solo la parte del rango
+            range_str = parts[1]  # Use only the range portion
         
-        # Dividir el rango en celdas de inicio y fin
+        # Split the range into starting and ending cells
         if ':' in range_str:
             start_cell, end_cell = range_str.split(':')
             start_row, start_col = ExcelRange.parse_cell_ref(start_cell)
             end_row, end_col = ExcelRange.parse_cell_ref(end_cell)
         else:
-            # Si es una sola celda, inicio y fin son iguales
+            # If only one cell, start and end are the same
             start_row, start_col = ExcelRange.parse_cell_ref(range_str)
             end_row, end_col = start_row, start_col
         
@@ -233,7 +232,7 @@ class ExcelRange:
         if row < 0 or col < 0:
             raise ValueError(f"Índices negativos no válidos: fila={row}, columna={col}")
         
-        # Convertir columna a letras
+        # Convert column index to letters
         col_str = ""
         col_val = col + 1  # Convertir a base 1 para cálculo
         
@@ -242,7 +241,7 @@ class ExcelRange:
             col_str = chr(65 + remainder) + col_str
             col_val = (col_val - 1) // 26
         
-        # Convertir fila a número (base 1 para Excel)
+        # Convert row index to a 1-based Excel number
         row_val = row + 1
         
         return f"{col_str}{row_val}"
@@ -294,25 +293,25 @@ class ExcelRange:
         start_row, start_col, end_row, end_col = ExcelRange.parse_range(pure_range)
         return sheet_name, start_row, start_col, end_row, end_col
 
-# Constantes y mapeos
-# Mapeo de nombres de estilo a números de estilo de Excel
+# Constants and mappings
+# Map style names to Excel style numbers
 CHART_STYLE_NAMES = {
-    # Estilos claros
+    # Light styles
     'light-1': 1, 'light-2': 2, 'light-3': 3, 'light-4': 4, 'light-5': 5, 'light-6': 6,
     'office-1': 1, 'office-2': 2, 'office-3': 3, 'office-4': 4, 'office-5': 5, 'office-6': 6,
     'white': 1, 'minimal': 2, 'soft': 3, 'gradient': 4, 'muted': 5, 'outlined': 6,
     
-    # Estilos oscuros
+    # Dark styles
     'dark-1': 7, 'dark-2': 8, 'dark-3': 9, 'dark-4': 10, 'dark-5': 11, 'dark-6': 12, 
     'dark-blue': 7, 'dark-gray': 8, 'dark-green': 9, 'dark-red': 10, 'dark-purple': 11, 'dark-orange': 12,
     'navy': 7, 'charcoal': 8, 'forest': 9, 'burgundy': 10, 'indigo': 11, 'rust': 12,
     
-    # Estilos coloridos
+    # Colorful styles
     'colorful-1': 13, 'colorful-2': 14, 'colorful-3': 15, 'colorful-4': 16, 
     'colorful-5': 17, 'colorful-6': 18, 'colorful-7': 19, 'colorful-8': 20,
     'bright': 13, 'vivid': 14, 'rainbow': 15, 'multi': 16, 'contrast': 17, 'vibrant': 18,
     
-    # Temas de Office
+    # Office themes
     'ion-1': 21, 'ion-2': 22, 'ion-3': 23, 'ion-4': 24,
     'wisp-1': 25, 'wisp-2': 26, 'wisp-3': 27, 'wisp-4': 28,
     'aspect-1': 29, 'aspect-2': 30, 'aspect-3': 31, 'aspect-4': 32,
@@ -320,7 +319,7 @@ CHART_STYLE_NAMES = {
     'gallery-1': 37, 'gallery-2': 38, 'gallery-3': 39, 'gallery-4': 40,
     'median-1': 41, 'median-2': 42, 'median-3': 43, 'median-4': 44,
     
-    # Estilos para tipos específicos de gráficos
+    # Styles for specific chart types
     'column-default': 1, 'column-dark': 7, 'column-colorful': 13, 
     'bar-default': 1, 'bar-dark': 7, 'bar-colorful': 13,
     'line-default': 1, 'line-dark': 7, 'line-markers': 3, 'line-dash': 5,
@@ -329,19 +328,19 @@ CHART_STYLE_NAMES = {
     'scatter-default': 1, 'scatter-dark': 7, 'scatter-bubble': 4, 'scatter-smooth': 9,
 }
 
-# Mapeo entre estilos y paletas de colores recomendadas
+# Mapping between styles and recommended color palettes
 STYLE_TO_PALETTE = {
-    # Estilos claros (1-6)
+    # Light styles (1-6)
     1: 'office', 2: 'office', 3: 'colorful', 4: 'colorful', 5: 'pastel', 6: 'pastel',
-    # Estilos oscuros (7-12)
+    # Dark styles (7-12)
     7: 'dark-blue', 8: 'dark-gray', 9: 'dark-green', 10: 'dark-red', 11: 'dark-purple', 12: 'dark-orange',
-    # Estilos coloridos (13-20)
+    # Colorful styles (13-20)
     13: 'colorful', 14: 'colorful', 15: 'colorful', 16: 'colorful', 
     17: 'colorful', 18: 'colorful', 19: 'colorful', 20: 'colorful',
 }
 
-# CHART_COLOR_SCHEMES (con esquemas de colores) - Esta constante estaría normalmente definida 
-# en el módulo original, pero la incluyo simplificada
+# CHART_COLOR_SCHEMES - normally defined in the original module
+# Included here in simplified form
 CHART_COLOR_SCHEMES = {
     'default': ['4472C4', 'ED7D31', 'A5A5A5', 'FFC000', '5B9BD5', '70AD47', '8549BA', 'C55A11'],
     'colorful': ['5B9BD5', 'ED7D31', 'A5A5A5', 'FFC000', '4472C4', '70AD47', '264478', '9E480E'],
@@ -353,32 +352,31 @@ CHART_COLOR_SCHEMES = {
     'dark-orange': ['C55A11', 'ED7D31', 'F4B183', 'FFC000', 'FFD966', 'FF8C00', 'FF7F50', 'FF4500']
 }
 
-# Función auxiliar para obtener una hoja de trabajo (unificada)
+# Helper function to obtain a worksheet (unified)
 def get_sheet(wb, sheet_name_or_index) -> Any:
-    """
-    Obtiene una hoja de Excel por nombre o índice.
-    
+    """Retrieve a worksheet by name or index.
+
     Args:
-        wb: Objeto workbook de openpyxl
-        sheet_name_or_index: Nombre o índice de la hoja
-        
+        wb: Openpyxl workbook object.
+        sheet_name_or_index: Sheet name or numeric index.
+
     Returns:
-        Objeto worksheet
-        
+        Worksheet object.
+
     Raises:
-        SheetNotFoundError: Si la hoja no existe
+        SheetNotFoundError: If the sheet does not exist.
     """
     if wb is None:
         raise ExcelMCPError("El workbook no puede ser None")
     
     if isinstance(sheet_name_or_index, int):
-        # Si es un índice, intentar acceder por posición
+        # If an index is provided, try to access by position
         if 0 <= sheet_name_or_index < len(wb.worksheets):
             return wb.worksheets[sheet_name_or_index]
         else:
             raise SheetNotFoundError(f"No existe una hoja con el índice {sheet_name_or_index}")
     else:
-        # Si es un nombre, intentar acceder por nombre
+        # If a name is provided, try to access by name
         try:
             return wb[sheet_name_or_index]
         except KeyError:
@@ -387,32 +385,32 @@ def get_sheet(wb, sheet_name_or_index) -> Any:
         except Exception as e:
             raise ExcelMCPError(f"Error al acceder a la hoja: {e}")
 
-# Función auxiliar para convertir estilo a número
+# Helper function to convert a style specifier into a numeric style
 def parse_chart_style(style):
     """
-    Convierte diferentes formatos de estilo a un número de estilo de Excel (1-48).
-    
+    Convert different style formats into a numeric Excel style (1-48).
+
     Args:
-        style: Estilo en formato int, str numérico, 'styleN', o nombre descriptivo
-        
+        style: Style as an int, numeric str, ``styleN`` or descriptive name.
+
     Returns:
-        Número de estilo entre 1-48, o None si no es un estilo válido
+        Integer style between 1 and 48, or ``None`` if not valid.
     """
     if isinstance(style, int) and 1 <= style <= 48:
         return style
         
     if isinstance(style, str):
-        # Caso 1: String numérico '5'
+        # Case 1: numeric string like '5'
         if style.isdigit():
             style_num = int(style)
             if 1 <= style_num <= 48:
                 return style_num
                 
-        # Caso 2: Formato 'styleN' o 'Style N'
+        # Case 2: format 'styleN' or 'Style N'
         style_lower = style.lower()
         if style_lower.startswith('style'):
             try:
-                # Extraer el número después de 'style'
+                # Extract the number following 'style'
                 num_part = ''.join(c for c in style_lower[5:] if c.isdigit())
                 if num_part:
                     style_num = int(num_part)
@@ -421,25 +419,25 @@ def parse_chart_style(style):
             except (ValueError, IndexError):
                 pass
                 
-        # Caso 3: Nombre descriptivo ('dark-blue', etc.)
+        # Case 3: descriptive name ('dark-blue', etc.)
         if style_lower in CHART_STYLE_NAMES:
             return CHART_STYLE_NAMES[style_lower]
             
     return None
 
-# Función auxiliar para aplicar estilos a gráficos y colores a la vez
+# Helper to apply chart styles and colors simultaneously
 def apply_chart_style(chart, style):
     """
-    Aplica un estilo predefinido al gráfico, incluyendo paleta de colores adecuada.
-    
+    Apply a predefined style to a chart including the appropriate color palette.
+
     Args:
-        chart: Objeto de gráfico openpyxl
-        style: Estilo en cualquier formato soportado (número, nombre, etc.)
-    
+        chart: Openpyxl chart object.
+        style: Style in any supported format (number, name, etc.).
+
     Returns:
-        True si se aplicó correctamente, False en caso contrario
+        ``True`` if applied successfully, ``False`` otherwise.
     """
-    # Convertir a número de estilo si no lo es ya
+    # Convert to a style number if needed
     style_number = parse_chart_style(style)
     
     if style_number is None:
@@ -452,30 +450,30 @@ def apply_chart_style(chart, style):
         logger.warning(f"Estilo de gráfico inválido: {style_number}. Debe estar entre 1 y 48.")
         return False
     
-    # Paso 1: Aplicar número de estilo a atributos del estilo nativo de Excel
+    # Step 1: apply the numeric style to native Excel attributes
     try:
-        # La propiedad style en openpyxl se corresponde con el número de estilo de Excel
+        # The style property in openpyxl corresponds to the Excel style number
         chart.style = style_number
         logger.info(f"Aplicado estilo nativo {style_number} al gráfico")
     except Exception as e:
         logger.warning(f"Error al aplicar estilo {style_number}: {e}")
     
-    # Paso 2: Aplicar paleta de colores asociada según el tema correspondiente al estilo
+    # Step 2: apply the color palette associated with the style's theme
     palette_name = STYLE_TO_PALETTE.get(style_number, 'default')
     colors = CHART_COLOR_SCHEMES.get(palette_name, CHART_COLOR_SCHEMES['default'])
     
-    # Aplicar colores a las series
+    # Apply colors to the series
     try:
         from openpyxl.chart.shapes import GraphicalProperties
         from openpyxl.drawing.fill import ColorChoice
         
         for i, series in enumerate(chart.series):
             if i < len(colors):
-                # Asegurarse de que existen propiedades gráficas
+                # Ensure graphical properties exist
                 if not hasattr(series, 'graphicalProperties') or series.graphicalProperties is None:
                     series.graphicalProperties = GraphicalProperties()
                     
-                # Asignar color usando ColorChoice para mejor compatibilidad
+                # Assign color using ColorChoice for better compatibility
                 color = colors[i % len(colors)]
                 if isinstance(color, str) and color.startswith('#'):
                     color = color[1:]
@@ -490,20 +488,19 @@ def apply_chart_style(chart, style):
         return False
 
 def determine_orientation(ws: Any, min_row: int, min_col: int, max_row: int, max_col: int) -> bool:
-    """Intenta deducir la orientación de los datos.
+    """Attempt to guess the orientation of the data.
 
-    Devuelve ``True`` si las categorías parecen estar en la primera columna
-    (orientación por columnas) y ``False`` si lo más probable es que se
-    encuentren en la primera fila. El algoritmo compara la proporción de valores
-    numéricos al interpretar los datos de ambas maneras y usa la forma del rango
-    como desempate. Está pensado para que un LLM evite elegir encabezados
-    equivocados en tablas cuadradas o poco claras.
+    Returns ``True`` if categories appear to be in the first column (column
+    oriented) and ``False`` if they are more likely in the first row. The
+    algorithm compares the ratio of numeric values for both interpretations and
+    uses the shape of the range as a tiebreaker. This helps a language model
+    avoid choosing wrong headers in ambiguous tables.
     """
 
     def _is_number(value: Any) -> bool:
         return isinstance(value, (int, float)) and not isinstance(value, bool)
 
-    # Calcular ratio de números asumiendo categorías en la primera columna
+    # Calculate ratio of numbers assuming categories are in the first column
     col_numeric = col_total = 0
     for c in range(min_col + 1, max_col + 1):
         for r in range(min_row, max_row + 1):
@@ -515,7 +512,7 @@ def determine_orientation(ws: Any, min_row: int, min_col: int, max_row: int, max
 
     col_ratio = (col_numeric / col_total) if col_total else 0
 
-    # Calcular ratio de números asumiendo categorías en la primera fila
+    # Calculate ratio of numbers assuming categories are in the first row
     row_numeric = row_total = 0
     for r in range(min_row + 1, max_row + 1):
         for c in range(min_col, max_col + 1):
@@ -528,15 +525,15 @@ def determine_orientation(ws: Any, min_row: int, min_col: int, max_row: int, max
     row_ratio = (row_numeric / row_total) if row_total else 0
 
     if row_ratio > col_ratio:
-        return False  # encabezados en la primera fila
+        return False  # headers in the first row
     if col_ratio > row_ratio:
-        return True   # encabezados en la primera columna
+        return True   # headers in the first column
 
-    # Desempate por forma del rango
+    # Tiebreaker based on range shape
     return (max_row - min_row) >= (max_col - min_col)
 
 def _trim_range_to_data(ws: Any, min_row: int, min_col: int, max_row: int, max_col: int) -> Tuple[int, int, int, int]:
-    """Elimina filas y columnas vacías al final de un rango."""
+    """Remove trailing empty rows and columns from a range."""
     while max_row >= min_row:
         if all(ws.cell(row=max_row, column=c).value in (None, "") for c in range(min_col, max_col + 1)):
             max_row -= 1
@@ -563,17 +560,17 @@ def _range_has_blank(ws: Any, min_row: int, min_col: int, max_row: int, max_col:
 # 1. Gestión de Workbooks (de workbook_manager_mcp.py)
 def create_workbook(filename: str, overwrite: bool = False) -> Any:
     """
-    Crea un nuevo fichero Excel vacío.
-    
+    Create a new empty Excel file.
+
     Args:
-        filename (str): Ruta y nombre del archivo a crear.
-        overwrite (bool, opcional): Si es True, sobreescribe archivo existente.
-        
+        filename (str): Full path and name of the file to create.
+        overwrite (bool, optional): Overwrite existing file if ``True``.
+
     Returns:
-        Objeto Workbook.
-        
+        Workbook object.
+
     Raises:
-        FileExistsError: Si el archivo existe y overwrite es False.
+        FileExistsError: If the file exists and ``overwrite`` is ``False``.
     """
     if os.path.exists(filename) and not overwrite:
         raise FileExistsError(f"El archivo '{filename}' ya existe. Use overwrite=True para sobreescribir.")
@@ -585,16 +582,16 @@ def create_workbook(filename: str, overwrite: bool = False) -> Any:
 
 def open_workbook(filename: str) -> Any:
     """
-    Abre un fichero Excel existente.
-    
+    Open an existing Excel file.
+
     Args:
-        filename (str): Ruta del archivo.
-        
+        filename (str): Path to the file.
+
     Returns:
-        Objeto Workbook.
-        
+        Workbook object.
+
     Raises:
-        FileNotFoundError: Si el archivo no existe.
+        FileNotFoundError: If the file does not exist.
     """
     if not os.path.exists(filename):
         raise FileNotFoundError(f"El archivo '{filename}' no existe.")
@@ -608,17 +605,17 @@ def open_workbook(filename: str) -> Any:
 
 def save_workbook(wb: Any, filename: Optional[str] = None) -> str:
     """
-    Guarda el Workbook en disco.
-    
+    Save the workbook to disk.
+
     Args:
-        wb: Objeto Workbook.
-        filename (str, opcional): Si se indica, guarda con otro nombre.
-        
+        wb: Workbook object.
+        filename (str, optional): Alternative file name if provided.
+
     Returns:
-        Ruta del fichero guardado.
-        
+        Path to the saved file.
+
     Raises:
-        ExcelMCPError: Si hay error al guardar.
+        ExcelMCPError: If an error occurs while saving.
     """
     if not wb:
         raise ExcelMCPError("El workbook no puede ser None")
@@ -638,13 +635,13 @@ def save_workbook(wb: Any, filename: Optional[str] = None) -> str:
 
 def close_workbook(wb: Any) -> None:
     """
-    Cierra el Workbook en memoria.
-    
+    Close the workbook in memory.
+
     Args:
-        wb: Objeto Workbook.
-        
+        wb: Workbook object.
+
     Returns:
-        Ninguno.
+        None.
     """
     if not wb:
         return
@@ -659,13 +656,13 @@ def close_workbook(wb: Any) -> None:
 
 def list_sheets(wb: Any) -> List[str]:
     """
-    Devuelve lista de nombres de hojas.
-    
+    Return a list of sheet names.
+
     Args:
-        wb: Objeto Workbook.
-        
+        wb: Workbook object.
+
     Returns:
-        List[str]: Lista de nombres de hojas.
+        List[str]: Names of the sheets.
     """
     if not wb:
         raise ExcelMCPError("El workbook no puede ser None")
@@ -673,7 +670,7 @@ def list_sheets(wb: Any) -> List[str]:
     if hasattr(wb, 'sheetnames'):
         return wb.sheetnames
     
-    # Alternativa si no se puede acceder a sheetnames
+    # Alternative if sheetnames cannot be accessed
     sheet_names = []
     for sheet in wb.worksheets:
         if hasattr(sheet, 'title'):
@@ -683,18 +680,18 @@ def list_sheets(wb: Any) -> List[str]:
 
 def add_sheet(wb: Any, sheet_name: str, index: Optional[int] = None) -> Any:
     """
-    Añade una nueva hoja vacía.
-    
+    Add a new empty worksheet.
+
     Args:
-        wb: Objeto Workbook.
-        sheet_name (str): Nombre de la hoja.
-        index (int, opcional): Posición en pestañas.
-        
+        wb: Workbook object.
+        sheet_name (str): Name of the sheet.
+        index (int, optional): Position in the tab list.
+
     Returns:
-        Hoja creada.
-        
+        The created worksheet.
+
     Raises:
-        SheetExistsError: Si ya existe una hoja con ese nombre.
+        SheetExistsError: If a sheet with that name already exists.
     """
     if not wb:
         raise ExcelMCPError("El workbook no puede ser None")
@@ -713,14 +710,14 @@ def add_sheet(wb: Any, sheet_name: str, index: Optional[int] = None) -> Any:
 
 def delete_sheet(wb: Any, sheet_name: str) -> None:
     """
-    Elimina la hoja indicada.
-    
+    Delete the specified worksheet.
+
     Args:
-        wb: Objeto Workbook.
-        sheet_name (str): Nombre de la hoja a eliminar.
-        
+        wb: Workbook object.
+        sheet_name (str): Name of the sheet to remove.
+
     Raises:
-        SheetNotFoundError: Si la hoja no existe.
+        SheetNotFoundError: If the sheet does not exist.
     """
     if not wb:
         raise ExcelMCPError("El workbook no puede ser None")
@@ -738,16 +735,16 @@ def delete_sheet(wb: Any, sheet_name: str) -> None:
 
 def rename_sheet(wb: Any, old_name: str, new_name: str) -> None:
     """
-    Renombra una hoja.
-    
+    Rename a worksheet.
+
     Args:
-        wb: Objeto Workbook.
-        old_name (str): Nombre actual de la hoja.
-        new_name (str): Nuevo nombre para la hoja.
-        
+        wb: Workbook object.
+        old_name (str): Current sheet name.
+        new_name (str): New sheet name.
+
     Raises:
-        SheetNotFoundError: Si la hoja original no existe.
-        SheetExistsError: Si ya existe una hoja con el nuevo nombre.
+        SheetNotFoundError: If the original sheet does not exist.
+        SheetExistsError: If a sheet with the new name already exists.
     """
     if not wb:
         raise ExcelMCPError("El workbook no puede ser None")
@@ -768,23 +765,23 @@ def rename_sheet(wb: Any, old_name: str, new_name: str) -> None:
         raise ExcelMCPError(f"Error al renombrar la hoja: {e}")
 
 # 2. Lectura y exploración de datos (de excel_mcp_complete.py)
-def read_sheet_data(wb: Any, sheet_name: str, range_str: Optional[str] = None, 
+def read_sheet_data(wb: Any, sheet_name: str, range_str: Optional[str] = None,
                    formulas: bool = False) -> List[List[Any]]:
     """
-    Lee valores y, opcionalmente, fórmulas de una hoja de Excel.
+    Read values and optionally formulas from an Excel sheet.
     
     Args:
-        wb: Objeto workbook de openpyxl
-        sheet_name: Nombre de la hoja
-        range_str: Rango en formato A1:B5, o None para toda la hoja
-        formulas: Si es True, devuelve fórmulas en lugar de valores calculados
+        wb: Openpyxl workbook object
+        sheet_name: Sheet name
+        range_str: Range in ``A1:B5`` format or ``None`` for the whole sheet
+        formulas: If ``True`` return formulas instead of calculated values
     
     Returns:
-        Lista de listas con los valores o fórmulas de las celdas
+        List of lists with cell values or formulas
         
     Raises:
-        SheetNotFoundError: Si la hoja no existe
-        RangeError: Si el rango es inválido
+        SheetNotFoundError: If the sheet does not exist
+        RangeError: If the range is invalid
     """
     # Obtener la hoja
     ws = get_sheet(wb, sheet_name)
