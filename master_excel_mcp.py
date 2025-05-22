@@ -2171,13 +2171,13 @@ def create_dashboard(wb: Any, dashboard_config: Dict[str, Any],
         wb: Openpyxl workbook object.
         dashboard_config: Dictionary with the complete dashboard configuration
             {
-                "title": "Dashboard de Ventas",
+                "title": "Sales Dashboard",
                 "sheet": "Dashboard",
-                "data_sheet": "Datos",
-                "data": [[datos]],
+                "data_sheet": "Data",
+                "data": [[data]],
                 "sections": [
                     {
-                        "title": "Ventas por Región",
+                        "title": "Sales by Region",
                         "type": "chart",
                         "chart_type": "column",
                         "data_range": "A1:B10",
@@ -2185,10 +2185,10 @@ def create_dashboard(wb: Any, dashboard_config: Dict[str, Any],
                         "style": "dark-blue"
                     },
                     {
-                        "title": "Tabla de Productos",
+                        "title": "Product Table",
                         "type": "table",
                         "data_range": "D1:F10",
-                        "name": "TablaProductos",
+                        "name": "ProductTable",
                         "style": "TableStyleMedium9"
                     }
                 ]
@@ -2399,24 +2399,22 @@ def create_dashboard(wb: Any, dashboard_config: Dict[str, Any],
 
 def apply_excel_template(wb: Any, template_name: str, data: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Aplica una plantilla predefinida a un libro de Excel.
-    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+    Apply a predefined template to an Excel workbook.
+    🔒 **Emojis must never be included in text written to cells, labels, titles or charts.**
 
-    
     Args:
+        wb: Openpyxl workbook object.
+        template_name (str): Name of the template to apply (e.g. ``"sales_report"``, ``"dashboard"``).
+        data: Dictionary with data specific to the template.
 
-        wb: Objeto workbook de openpyxl
-        template_name (str): Nombre de la plantilla a aplicar (ej. "informe_ventas", "dashboard")
-        data: Diccionario con datos específicos para la plantilla
-        
     Returns:
-        Diccionario con información de los elementos creados
-    
-    Plantillas disponibles:
-        - "basic_report": Informe básico con tabla y gráfico
-        - "financial_dashboard": Dashboard financiero con múltiples KPIs y gráficos
-        - "sales_analysis": Análisis de ventas por región y producto
-        - "project_tracker": Seguimiento de proyectos con tablas y gráficos de progreso
+        Dictionary with information about the created elements.
+
+    Available templates:
+        - ``"basic_report"``: Basic report with table and chart.
+        - ``"financial_dashboard"``: Financial dashboard with multiple KPIs and charts.
+        - ``"sales_analysis"``: Sales analysis by region and product.
+        - ``"project_tracker"``: Project tracker with progress tables and charts.
     """
     result = {
         "template": template_name,
@@ -2747,28 +2745,27 @@ def apply_excel_template(wb: Any, template_name: str, data: Dict[str, Any]) -> D
     
     return result
 
-def update_report(wb: Any, report_config: Dict[str, Any], 
+def update_report(wb: Any, report_config: Dict[str, Any],
                  recalculate: bool = True) -> Dict[str, Any]:
     """
-    Actualiza un informe existente con nuevos datos.
-    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+    Update an existing report with new data.
+    🔒 **Emojis must never be included in text written to cells, labels, titles or charts.**
 
-    
     Args:
-        wb: Objeto workbook de openpyxl
-        report_config: Configuración del informe a actualizar
+        wb: Openpyxl workbook object.
+        report_config: Configuration for the report update
             {
                 "data_updates": {
-                    "Ventas": {"range": "A2:C10", "data": [[nuevos datos]]},
-                    "Clientes": {"range": "A2:D20", "data": [[nuevos datos]]}
+                    "Sales": {"range": "A2:C10", "data": [[new data]]},
+                    "Customers": {"range": "A2:D20", "data": [[new data]]}
                 },
                 "recalculate_formulas": True,
                 "refresh_charts": True
             }
-        recalculate: Si True, recalcula fórmulas después de actualizar
-        
+        recalculate: If ``True`` recalculate formulas after updating.
+
     Returns:
-        Diccionario con información de los elementos actualizados
+        Dictionary with information about the updated elements.
     """
     result = {
         "updated_sheets": [],
@@ -2936,26 +2933,26 @@ def update_report(wb: Any, report_config: Dict[str, Any],
 
 def import_data(wb: Any, import_config: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Importa datos de distintas fuentes a Excel.
-    
+    Import data from various sources into Excel.
+
     Args:
-        wb: Objeto workbook de openpyxl
-        import_config: Configuración de la importación
+        wb: Openpyxl workbook object.
+        import_config: Import configuration
             {
-                "source": "csv", // csv, json, pandas, etc.
-                "source_path": "datos.csv",
-                "sheet": "Datos",
+                "source": "csv",  # csv, json, pandas, etc.
+                "source_path": "data.csv",
+                "sheet": "Data",
                 "start_cell": "A1",
                 "options": {
                     "delimiter": ",",
                     "has_header": true
                 }
             }
-        
+
     Returns:
-        Diccionario con información de los datos importados
-    
-    Nota: Esta función es un ejemplo simplificado que solo importa datos desde CSV.
+        Dictionary with information about the imported data.
+
+    Note: This function is a simplified example that only imports data from CSV.
     """
     result = {
         "source": import_config.get("source"),
@@ -3084,26 +3081,26 @@ def import_data(wb: Any, import_config: Dict[str, Any]) -> Dict[str, Any]:
 
 def export_data(wb: Any, export_config: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Exporta datos de Excel a distintos formatos.
-    
+    Export data from Excel to different formats.
+
     Args:
-        wb: Objeto workbook de openpyxl
-        export_config: Configuración de la exportación
+        wb: Openpyxl workbook object.
+        export_config: Export configuration
             {
-                "format": "csv", // csv, json, pdf, html, etc.
-                "sheet": "Datos",
+                "format": "csv",  # csv, json, pdf, html, etc.
+                "sheet": "Data",
                 "range": "A1:D10",
-                "output_path": "datos_exportados.csv",
+                "output_path": "exported_data.csv",
                 "options": {
                     "delimiter": ",",
                     "include_header": true
                 }
             }
-        
+
     Returns:
-        Diccionario con información de los datos exportados
-    
-    Nota: Esta función es un ejemplo simplificado que solo exporta a CSV y JSON.
+        Dictionary with information about the exported data.
+
+    Note: This function is a simplified example that only exports to CSV and JSON.
     """
     result = {
         "format": export_config.get("format"),
@@ -3196,15 +3193,14 @@ def export_data(wb: Any, export_config: Dict[str, Any]) -> Dict[str, Any]:
 
 def create_report_from_template(template_file, output_file, data_mappings, chart_mappings=None, format_mappings=None):
     """
-    Crea un informe basado en una plantilla Excel, sustituyendo datos, actualizando gráficos y aplicando formatos.
-    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+    Create a report based on an Excel template, replacing data, updating charts and applying formats.
+    🔒 **Emojis must never be included in text written to cells, labels, titles or charts.**
 
-    
     Args:
-        template_file (str): Ruta a la plantilla Excel
+        template_file (str): Path to the Excel template.
 
-        output_file (str): Ruta donde guardar el informe generado
-        data_mappings (dict): Diccionario con mapeos de datos:
+        output_file (str): Path where the generated report will be saved.
+        data_mappings (dict): Dictionary with data mappings:
             {
                 "sheet_name": {
                     "range1": data_list1,
@@ -3212,17 +3208,17 @@ def create_report_from_template(template_file, output_file, data_mappings, chart
                     ...
                 }
             }
-        chart_mappings (dict, opcional): Diccionario con actualizaciones de gráficos:
+        chart_mappings (dict, optional): Dictionary with chart updates:
             {
                 "sheet_name": {
                     "chart_id": {
-                        "title": "Nuevo título",
-                        "data_range": "Nuevo rango",
+                        "title": "New title",
+                        "data_range": "New range",
                         ...
                     }
                 }
             }
-        format_mappings (dict, opcional): Diccionario con formatos a aplicar:
+        format_mappings (dict, optional): Dictionary with formats to apply:
             {
                 "sheet_name": {
                     "range1": {"number_format": "#,##0.00"},
@@ -3230,9 +3226,9 @@ def create_report_from_template(template_file, output_file, data_mappings, chart
                     ...
                 }
             }
-    
+
     Returns:
-        dict: Resultado de la operación
+        dict: Result of the operation
     """
     try:
         # Verificar que el archivo de plantilla existe
@@ -3336,18 +3332,16 @@ def create_report_from_template(template_file, output_file, data_mappings, chart
 
 def create_dynamic_dashboard(file_path, data, dashboard_config, overwrite=False):
     """
-    Crea un dashboard dinámico con múltiples visualizaciones en un solo paso.
+    Create a dynamic dashboard with multiple visualizations in a single step.
 
-    Los modelos que utilicen esta función deben procurar que las tablas y los
-    🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
-
-    gráficos no se solapen. Es aconsejable dejar filas de separación y comprobar
-    el ancho necesario de cada columna tras escribir los datos. Aplicar estilos
-    coherentes ayuda a que el resultado sea más limpio y profesional.
+    Models using this function should ensure that tables and charts do not overlap.
+    🔒 **Emojis must never be included in text written to cells, labels, titles or charts.**
+    Leaving empty rows between sections and adjusting column widths after writing
+    the data helps produce a clean, professional result.
 
     Args:
-        file_path (str): Ruta al archivo Excel a crear o modificar
-        data (dict): Diccionario con datos por hoja:
+        file_path (str): Path to the Excel file to create or modify.
+        data (dict): Dictionary with data per sheet:
             {
                 "sheet_name": [
                     ["Header1", "Header2", ...],
@@ -3355,7 +3349,7 @@ def create_dynamic_dashboard(file_path, data, dashboard_config, overwrite=False)
                     ...
                 ]
             }
-        dashboard_config (dict): Configuración del dashboard:
+        dashboard_config (dict): Dashboard configuration:
             {
                 "tables": [
                     {
@@ -3384,10 +3378,10 @@ def create_dynamic_dashboard(file_path, data, dashboard_config, overwrite=False)
                     }
                 ]
             }
-        overwrite (bool): Si es True, sobrescribe el archivo si existe
-    
+        overwrite (bool): If ``True`` overwrite the file if it exists.
+
     Returns:
-        dict: Resultado de la operación
+        dict: Result of the operation
     """
     try:
         # Verificar si el archivo existe
@@ -4321,20 +4315,20 @@ if HAS_MCP:
     # Registrar funciones básicas de gestión de workbooks
     @mcp.tool(description="Crea un nuevo fichero Excel vacío")
     def create_workbook_tool(filename, overwrite=False):
-        """Crea un nuevo fichero Excel vacío
-        
-        Esta función permite crear un nuevo archivo Excel (.xlsx) vacío en la ubicación especificada.
-        Es el primer paso recomendado cuando se quiere generar un nuevo documento desde cero.
-        
+        """Create a new empty Excel workbook.
+
+        This function creates an empty ``.xlsx`` file at the specified location.
+        It is the recommended first step when generating a new document from scratch.
+
         Args:
-            filename (str): Ruta completa y nombre del archivo a crear. Debe tener extensión .xlsx
-            overwrite (bool, optional): Si es True, sobrescribe el archivo si ya existe. Por defecto es False.
-        
+            filename (str): Full path and name of the file to create. Must have a ``.xlsx`` extension.
+            overwrite (bool, optional): If ``True`` overwrite the file if it already exists. Default is ``False``.
+
         Returns:
-            dict: Información sobre el resultado de la operación, incluyendo la ruta del archivo creado.
-        
-        Ejemplo:
-            create_workbook_tool("C:/datos/nuevo_libro.xlsx")
+            dict: Information about the operation result including the created file path.
+
+        Example:
+            create_workbook_tool("C:/data/new_book.xlsx")
         """
         try:
             wb = create_workbook(filename, overwrite)
@@ -4354,22 +4348,22 @@ if HAS_MCP:
     
     @mcp.tool(description="Abre un fichero Excel existente")
     def open_workbook_tool(filename):
-        """Abre un fichero Excel existente
-        
-        Esta función permite abrir un archivo Excel (.xlsx, .xls) existente para su manipulación.
-        Es necesario usar esta función antes de realizar cualquier operación sobre un archivo existente.
-        
+        """Open an existing Excel file.
+
+        This function opens an existing ``.xlsx`` or ``.xls`` file so it can be manipulated.
+        Use this before performing any operation on an existing file.
+
         Args:
-            filename (str): Ruta completa y nombre del archivo Excel a abrir.
-            
+            filename (str): Full path and name of the Excel file to open.
+
         Returns:
-            dict: Información sobre el archivo abierto, incluyendo número de hojas y otras propiedades.
-            
+            dict: Information about the opened file including sheet count and other properties.
+
         Raises:
-            FileNotFoundError: Si el archivo especificado no existe.
-            
-        Ejemplo:
-            open_workbook_tool("C:/datos/informe_ventas.xlsx")
+            FileNotFoundError: If the specified file does not exist.
+
+        Example:
+            open_workbook_tool("C:/data/sales_report.xlsx")
         """
         try:
             wb = open_workbook(filename)
@@ -4392,22 +4386,20 @@ if HAS_MCP:
     
     @mcp.tool(description="Guarda el Workbook en disco")
     def save_workbook_tool(filename, new_filename=None):
-        """Guarda el Workbook en disco
-        
-        Esta función permite guardar un archivo Excel que ha sido modificado.
-        Es importante llamar a esta función después de realizar cambios para asegurar que estos se persistan.
-        
+        """Save the workbook to disk.
+
+        Use this function after modifying a workbook to persist the changes.
+
         Args:
-            filename (str): Ruta completa y nombre del archivo Excel a guardar.
-            new_filename (str, optional): Si se proporciona, guarda el archivo con un nuevo nombre
-                                          (equivalente a 'Guardar como'). Por defecto es None.
-        
+            filename (str): Full path and name of the Excel file to save.
+            new_filename (str, optional): If provided, save the file under a new name ("Save As"). Defaults to ``None``.
+
         Returns:
-            dict: Información sobre el resultado de la operación, incluyendo la ruta donde se guardó el archivo.
-        
-        Ejemplo:
-            save_workbook_tool("C:/datos/informe.xlsx")
-            save_workbook_tool("C:/datos/informe.xlsx", "C:/datos/informe_backup.xlsx") # Guardar como
+            dict: Information about the operation result including the saved file path.
+
+        Example:
+            save_workbook_tool("C:/data/report.xlsx")
+            save_workbook_tool("C:/data/report.xlsx", "C:/data/report_backup.xlsx")  # Save As
         """
         try:
             wb = open_workbook(filename)
@@ -4429,22 +4421,22 @@ if HAS_MCP:
     
     @mcp.tool(description="Lista las hojas disponibles en un archivo Excel")
     def list_sheets_tool(filename):
-        """Lista las hojas disponibles en un archivo Excel
-        
-        Esta función muestra todas las hojas de cálculo que contiene un archivo Excel.
-        Es útil para obtener una visión general del contenido del libro antes de trabajar con él.
-        
+        """List the worksheets available in an Excel file.
+
+        This function returns all worksheets contained in an Excel workbook and is useful
+        to get an overview before working with the file.
+
         Args:
-            filename (str): Ruta completa y nombre del archivo Excel a examinar.
-            
+            filename (str): Full path and name of the Excel file to inspect.
+
         Returns:
-            dict: Diccionario con la lista de nombres de hojas y sus posiciones en el libro.
-            
+            dict: Dictionary with the sheet names and their positions in the workbook.
+
         Raises:
-            FileNotFoundError: Si el archivo especificado no existe.
-            
-        Ejemplo:
-            list_sheets_tool("C:/datos/informe_financiero.xlsx")  # Devuelve: {"sheets": ["Ventas", "Gastos", "Resumen"]}
+            FileNotFoundError: If the specified file does not exist.
+
+        Example:
+            list_sheets_tool("C:/data/financial_report.xlsx")  # Returns: {"sheets": ["Sales", "Costs", "Summary"]}
         """
         try:
             wb = open_workbook(filename)
@@ -4468,27 +4460,27 @@ if HAS_MCP:
     # Registrar funciones básicas de manipulación de hojas
     @mcp.tool(description="Añade una nueva hoja vacía")
     def add_sheet_tool(filename, sheet_name, index=None):
-        """Añade una nueva hoja vacía
-        
-        Esta función permite agregar una nueva hoja de cálculo vacía a un libro de Excel existente.
-        Puedes especificar la posición donde quieres insertar la nueva hoja.
-        
+        """Add a new empty worksheet.
+
+        This function inserts a new blank worksheet into an existing Excel workbook.
+        You can specify the position where the sheet should be inserted.
+
         Args:
-            filename (str): Ruta completa y nombre del archivo Excel.
-            sheet_name (str): Nombre para la nueva hoja.
-            index (int, optional): Posición donde insertar la hoja (0 es la primera posición).
-                                 Si es None, se añade al final. Por defecto es None.
-        
+            filename (str): Full path and name of the Excel file.
+            sheet_name (str): Name for the new sheet.
+            index (int, optional): Position where the sheet will be inserted (``0`` is the first position).
+                                 If ``None`` the sheet is added at the end. Default is ``None``.
+
         Returns:
-            dict: Información sobre el resultado de la operación, incluyendo la lista actualizada de hojas.
-            
+            dict: Information about the operation including the updated list of sheets.
+
         Raises:
-            FileNotFoundError: Si el archivo especificado no existe.
-            SheetExistsError: Si ya existe una hoja con el mismo nombre.
-            
-        Ejemplo:
-            add_sheet_tool("C:/datos/informe.xlsx", "Nuevo Resumen")  # Añade al final
-            add_sheet_tool("C:/datos/informe.xlsx", "Portada", 0)  # Añade como primera hoja
+            FileNotFoundError: If the specified file does not exist.
+            SheetExistsError: If a sheet with the same name already exists.
+
+        Example:
+            add_sheet_tool("C:/data/report.xlsx", "New Summary")  # Add at the end
+            add_sheet_tool("C:/data/report.xlsx", "Cover", 0)  # Add as first sheet
         """
         try:
             wb = open_workbook(filename)
@@ -4515,26 +4507,25 @@ if HAS_MCP:
     
     @mcp.tool(description="Elimina la hoja indicada")
     def delete_sheet_tool(filename, sheet_name):
-        """
-        Elimina la hoja indicada
-        
-        Esta función permite eliminar una hoja de cálculo específica de un libro Excel.
-        Ten cuidado al usar esta función, ya que la eliminación es permanente una vez guardado el archivo.
-        
+        """Delete the indicated worksheet.
+
+        This function removes a specific worksheet from an Excel workbook. Use with care
+        because once the file is saved the deletion is permanent.
+
         Args:
-            filename (str): Ruta completa y nombre del archivo Excel.
-            sheet_name (str): Nombre de la hoja que se desea eliminar.
-            
+            filename (str): Full path and name of the Excel file.
+            sheet_name (str): Name of the worksheet to delete.
+
         Returns:
-            dict: Información sobre el resultado de la operación, incluyendo la lista actualizada de hojas.
-            
+            dict: Information about the operation including the updated list of sheets.
+
         Raises:
-            FileNotFoundError: Si el archivo especificado no existe.
-            SheetNotFoundError: Si no existe la hoja especificada.
-            ValueError: Si se intenta eliminar la única hoja del libro (Excel requiere al menos una hoja).
-            
-        Ejemplo:
-            delete_sheet_tool("C:/datos/informe.xlsx", "Borrador")
+            FileNotFoundError: If the specified file does not exist.
+            SheetNotFoundError: If the specified sheet does not exist.
+            ValueError: If attempting to delete the only sheet in the workbook.
+
+        Example:
+            delete_sheet_tool("C:/data/report.xlsx", "Draft")
         """
         try:
             wb = open_workbook(filename)
@@ -4561,26 +4552,25 @@ if HAS_MCP:
     
     @mcp.tool(description="Renombra una hoja")
     def rename_sheet_tool(filename, old_name, new_name):
-        """
-        Renombra una hoja
-        
-        Esta función permite cambiar el nombre de una hoja de cálculo existente en un libro Excel.
-        
+        """Rename a worksheet.
+
+        This function changes the name of an existing worksheet in an Excel workbook.
+
         Args:
-            filename (str): Ruta completa y nombre del archivo Excel.
-            old_name (str): Nombre actual de la hoja que se desea renombrar.
-            new_name (str): Nuevo nombre para la hoja.
-            
+            filename (str): Full path and name of the Excel file.
+            old_name (str): Current name of the sheet to rename.
+            new_name (str): New name for the sheet.
+
         Returns:
-            dict: Información sobre el resultado de la operación, incluyendo la lista actualizada de hojas.
-            
+            dict: Information about the operation including the updated list of sheets.
+
         Raises:
-            FileNotFoundError: Si el archivo especificado no existe.
-            SheetNotFoundError: Si no existe la hoja con el nombre original.
-            SheetExistsError: Si ya existe una hoja con el nuevo nombre.
-            
-        Ejemplo:
-            rename_sheet_tool("C:/datos/informe.xlsx", "Hoja1", "Resumen Ejecutivo")
+            FileNotFoundError: If the specified file does not exist.
+            SheetNotFoundError: If no sheet exists with the original name.
+            SheetExistsError: If a sheet with the new name already exists.
+
+        Example:
+            rename_sheet_tool("C:/data/report.xlsx", "Sheet1", "Executive Summary")
         """
         try:
             wb = open_workbook(filename)
@@ -4608,33 +4598,32 @@ if HAS_MCP:
     # Registrar funciones básicas de escritura
     @mcp.tool(description="Escribe un array bidimensional de valores o fórmulas")
     def write_sheet_data_tool(file_path, sheet_name, start_cell, data):
-        """
-        Escribe un array bidimensional de valores o fórmulas en una hoja de Excel
-        
-        Esta función permite escribir datos en un rango de celdas de una hoja Excel, comenzando desde
-        la celda especificada. Es ideal para insertar tablas de datos o matrices de valores.
-        
+        """Write a two-dimensional array of values or formulas to a worksheet.
+
+        This function writes data to a range of cells starting at ``start_cell``.
+        It is ideal for inserting tables of data or matrices of values.
+
         Args:
-            file_path (str): Ruta completa y nombre del archivo Excel.
-            sheet_name (str): Nombre de la hoja donde se escribirán los datos.
-            start_cell (str): Celda inicial desde donde comenzar a escribir (ej: "A1").
-            data (list): Array bidimensional (lista de listas) con los datos a escribir.
-                        Ejemplo: [["Nombre", "Edad"], ["Juan", 25], ["María", 30]]
-        
+            file_path (str): Full path and name of the Excel file.
+            sheet_name (str): Name of the worksheet where data will be written.
+            start_cell (str): Starting cell (e.g. ``"A1"``).
+            data (list): Two-dimensional list with the data to write.
+                        Example: [["Name", "Age"], ["John", 25], ["Mary", 30]]
+
         Returns:
-            dict: Información sobre el resultado de la operación, incluyendo el rango modificado.
-            
+            dict: Information about the operation, including the modified range.
+
         Raises:
-            FileNotFoundError: Si el archivo especificado no existe.
-            SheetNotFoundError: Si no existe la hoja especificada.
-            CellReferenceError: Si la referencia de celda no es válida.
-            
-        Ejemplo:
+            FileNotFoundError: If the specified file does not exist.
+            SheetNotFoundError: If the specified sheet does not exist.
+            CellReferenceError: If the cell reference is not valid.
+
+        Example:
             write_sheet_data_tool(
-                "C:/datos/informe.xlsx", 
-                "Datos", 
-                "B2", 
-                [["Trimestre", "Ventas", "Gastos"], ["Q1", 5000, 3000], ["Q2", 6200, 3100]]
+                "C:/data/report.xlsx",
+                "Data",
+                "B2",
+                [["Quarter", "Sales", "Costs"], ["Q1", 5000, 3000], ["Q2", 6200, 3100]]
             )
         """
         try:
@@ -4670,29 +4659,27 @@ if HAS_MCP:
     
     @mcp.tool(description="Actualiza individualmente una celda")
     def update_cell_tool(file_path, sheet_name, cell, value_or_formula):
-        """
-        Actualiza el valor o fórmula de una celda específica en una hoja de Excel
-        
-        Esta función permite modificar el contenido de una celda individual en una hoja de Excel.
-        Puede usarse tanto para valores normales como para fórmulas.
-        
+        """Update the value or formula of a specific cell.
+
+        This function modifies a single cell in a worksheet. It can be used for both values and formulas.
+
         Args:
-            file_path (str): Ruta completa y nombre del archivo Excel.
-            sheet_name (str): Nombre de la hoja que contiene la celda a actualizar.
-            cell (str): Referencia de la celda a actualizar (ej: "B5").
-            value_or_formula (str/int/float/bool): Valor o fórmula a establecer. Las fórmulas deben comenzar con "=".
-        
+            file_path (str): Full path and name of the Excel file.
+            sheet_name (str): Name of the sheet containing the cell to update.
+            cell (str): Reference of the cell to update (e.g. ``"B5"``).
+            value_or_formula (str | int | float | bool): Value or formula to set. Formulas must start with ``=``.
+
         Returns:
-            dict: Información sobre el resultado de la operación, incluyendo la celda modificada.
-            
+            dict: Information about the operation including the modified cell.
+
         Raises:
-            FileNotFoundError: Si el archivo especificado no existe.
-            SheetNotFoundError: Si no existe la hoja especificada.
-            CellReferenceError: Si la referencia de celda no es válida.
-            
-        Ejemplo:
-            update_cell_tool("C:/datos/informe.xlsx", "Ventas", "C4", 5280.50)  # Valor numérico
-            update_cell_tool("C:/datos/informe.xlsx", "Ventas", "D4", "=SUM(A1:A10)")  # Fórmula
+            FileNotFoundError: If the specified file does not exist.
+            SheetNotFoundError: If the specified sheet does not exist.
+            CellReferenceError: If the cell reference is not valid.
+
+        Example:
+            update_cell_tool("C:/data/report.xlsx", "Sales", "C4", 5280.50)  # Numeric value
+            update_cell_tool("C:/data/report.xlsx", "Sales", "D4", "=SUM(A1:A10)")  # Formula
         """
         try:
             # Abrir el archivo y obtener la hoja
@@ -4723,35 +4710,33 @@ if HAS_MCP:
     # Registrar funciones avanzadas
     @mcp.tool(description="Define un rango como Tabla con estilo en una hoja de Excel")
     def add_table_tool(file_path, sheet_name, table_name, cell_range, style=None):
-        """
-        Define un rango como Tabla con estilo en Excel
-        
-        Esta función convierte un rango de celdas en una tabla Excel con formato,
-        lo que permite filtrar, ordenar y dar formato automáticamente a los datos.
-        
+        """Define a range as a formatted table in Excel.
+
+        This function converts a cell range into an Excel table with formatting so the
+        data can be filtered and sorted automatically.
+
         Args:
-            file_path (str): Ruta completa y nombre del archivo Excel.
-            sheet_name (str): Nombre de la hoja donde se creará la tabla.
-            table_name (str): Nombre para la tabla (debe ser único en el libro).
-            cell_range (str): Rango de celdas para la tabla en formato Excel (ej: "A1:D10").
-            style (str, optional): Estilo de tabla a aplicar (ej: "TableStyleMedium9"). Si es None,
-                                 se utiliza el estilo predeterminado. Por defecto es None.
-        
+            file_path (str): Full path and name of the Excel file.
+            sheet_name (str): Name of the sheet where the table will be created.
+            table_name (str): Name for the table (must be unique within the workbook).
+            cell_range (str): Cell range for the table in Excel format (e.g. ``"A1:D10"``).
+            style (str, optional): Table style to apply (e.g. ``"TableStyleMedium9"``). If ``None`` the default style is used.
+
         Returns:
-            dict: Información sobre el resultado de la operación, incluyendo los detalles de la tabla creada.
-            
+            dict: Information about the operation including table details.
+
         Raises:
-            FileNotFoundError: Si el archivo especificado no existe.
-            SheetNotFoundError: Si no existe la hoja especificada.
-            RangeError: Si el rango especificado no es válido.
-            TableError: Si ya existe una tabla con el mismo nombre o hay otro problema con la tabla.
-            
-        Ejemplo:
+            FileNotFoundError: If the specified file does not exist.
+            SheetNotFoundError: If the specified sheet does not exist.
+            RangeError: If the provided range is not valid.
+            TableError: If a table with the same name already exists or another table issue occurs.
+
+        Example:
             add_table_tool(
-                "C:/datos/ventas.xlsx", 
-                "Datos", 
-                "TablaPreciosRegionales", 
-                "B3:F15", 
+                "C:/data/sales.xlsx",
+                "Data",
+                "RegionalPrices",
+                "B3:F15",
                 "TableStyleMedium2"
             )
         """
@@ -4786,42 +4771,39 @@ if HAS_MCP:
     
     @mcp.tool(description="Inserta un gráfico nativo en una hoja de Excel con múltiples opciones de personalización")
     def add_chart_tool(file_path, sheet_name, chart_type, data_range, title=None, position=None, style=None, theme=None, custom_palette=None):
-        """
-        Inserta un gráfico profesional nativo en una hoja de Excel
-        
-        Esta función crea un gráfico basado en datos de la hoja de cálculo, con múltiples opciones
-        de personalización para crear visualizaciones profesionales directamente en Excel.
-        
+        """Insert a professional native chart into a worksheet.
+
+        This function creates a chart based on worksheet data with multiple customization
+        options to build professional visualizations directly in Excel.
+
         Args:
-            file_path (str): Ruta completa y nombre del archivo Excel.
-            sheet_name (str): Nombre de la hoja donde se insertará el gráfico.
-            chart_type (str): Tipo de gráfico a crear. Opciones: 'line', 'bar', 'column', 'pie', 'scatter', 
-                             'area', 'doughnut', 'radar', 'surface', 'stock'.
-            data_range (str): Rango de celdas con los datos para el gráfico en formato Excel (ej: "A1:D10").
-            title (str, optional): Título para el gráfico. Por defecto es None.
-            position (str, optional): Posición donde insertar el gráfico en formato "A1:F15". 
-                                     Si es None, se usa una posición por defecto. Por defecto es None.
-            style (int, optional): Estilo numérico del gráfico (1-48). Por defecto es None.
-            theme (str, optional): Tema de colores para el gráfico. Por defecto es None.
-            custom_palette (list, optional): Lista de colores personalizados en formato hex (#RRGGBB). 
-                                           Por defecto es None.
-        
+            file_path (str): Full path and name of the Excel file.
+            sheet_name (str): Name of the sheet where the chart will be inserted.
+            chart_type (str): Type of chart to create. Options include ``'line'``, ``'bar'``, ``'column'``, ``'pie'``, ``'scatter'``,
+                             ``'area'``, ``'doughnut'``, ``'radar'``, ``'surface'``, ``'stock'``.
+            data_range (str): Range with the data for the chart in Excel format (e.g. ``"A1:D10"``).
+            title (str, optional): Title for the chart. Defaults to ``None``.
+            position (str, optional): Position to insert the chart in ``A1:F15`` format. Defaults to ``None`` for an automatic position.
+            style (int, optional): Numeric chart style (1-48). Defaults to ``None``.
+            theme (str, optional): Color theme for the chart. Defaults to ``None``.
+            custom_palette (list, optional): List of custom colors in hex (``#RRGGBB``). Defaults to ``None``.
+
         Returns:
-            dict: Información sobre el resultado de la operación, incluyendo detalles del gráfico creado.
-            
+            dict: Information about the operation including details of the created chart.
+
         Raises:
-            FileNotFoundError: Si el archivo especificado no existe.
-            SheetNotFoundError: Si no existe la hoja especificada.
-            RangeError: Si el rango de datos especificado no es válido.
-            ChartError: Si hay un problema con la creación del gráfico.
-            
-        Ejemplo:
+            FileNotFoundError: If the specified file does not exist.
+            SheetNotFoundError: If the specified sheet does not exist.
+            RangeError: If the data range is not valid.
+            ChartError: If there is a problem creating the chart.
+
+        Example:
             add_chart_tool(
-                "C:/datos/ventas.xlsx", 
-                "Datos", 
-                "column", 
-                "A1:B10", 
-                title="Ventas por Trimestre",
+                "C:/data/sales.xlsx",
+                "Data",
+                "column",
+                "A1:B10",
+                title="Quarterly Sales",
                 position="E1:J15",
                 style=12,
                 custom_palette=["#4472C4", "#ED7D31", "#A5A5A5"]
@@ -4863,19 +4845,18 @@ if HAS_MCP:
     # Registrar nuevas funciones combinadas
     @mcp.tool(description="Crea una hoja con datos en un solo paso")
     def create_sheet_with_data_tool(file_path, sheet_name, data, overwrite=False):
-        """
-        Crea un archivo Excel con una hoja y datos en un solo paso.
-        
-        Args:
-            🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+        """Create an Excel file with a single sheet and data in one step.
 
-            file_path (str): Ruta al archivo Excel a crear
-            sheet_name (str): Nombre de la hoja a crear
-            data (list): Array bidimensional con los datos
-            overwrite (bool): Si es True, sobrescribe el archivo si existe
-            
+        Args:
+            🔒 **Emojis must never be included in text written to cells, labels, titles or charts.**
+
+            file_path (str): Path to the Excel file to create.
+            sheet_name (str): Name of the sheet to create.
+            data (list): Two-dimensional array with the data.
+            overwrite (bool): If ``True`` overwrite the file if it already exists.
+
         Returns:
-            dict: Resultado de la operación
+            dict: Result of the operation.
         """
         try:
             # Verificar si el archivo existe
@@ -4928,26 +4909,25 @@ if HAS_MCP:
     
     @mcp.tool(description="Crea una tabla formateada con datos en un solo paso")
     def create_formatted_table_tool(file_path, sheet_name, start_cell, data, table_name, table_style="TableStyleMedium9", formats=None):
-        """
-        Crea una tabla formateada con datos en un solo paso.
-        
-        Args:
-            🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+        """Create a formatted table with data in one step.
 
-            file_path (str): Ruta al archivo Excel
-            sheet_name (str): Nombre de la hoja
-            start_cell (str): Celda inicial (ej. "A1")
-            data (list): Array bidimensional con los datos
-            table_name (str): Nombre para la tabla
-            table_style (str): Estilo de la tabla
-            formats (dict): Diccionario con formatos a aplicar:
+        Args:
+            🔒 **Emojis must never be included in text written to cells, labels, titles or charts.**
+
+            file_path (str): Path to the Excel file.
+            sheet_name (str): Name of the sheet.
+            start_cell (str): Starting cell (e.g. ``"A1"``).
+            data (list): Two-dimensional array with the data.
+            table_name (str): Name for the table.
+            table_style (str): Table style.
+            formats (dict): Dictionary with formats to apply:
                 {
-                    "A2:A10": "#,##0.00",  # Formato numérico
-                    "B2:B10": {"bold": True, "fill_color": "FFFF00"}  # Estilo
+                    "A2:A10": "#,##0.00",  # Numeric format
+                    "B2:B10": {"bold": True, "fill_color": "FFFF00"}  # Style
                 }
-                
+
         Returns:
-            dict: Resultado de la operación
+            dict: Result of the operation.
         """
         try:
             # Verificar si el archivo existe, si no, crearlo
@@ -5009,22 +4989,21 @@ if HAS_MCP:
     
     @mcp.tool(description="Crea un gráfico a partir de datos nuevos en un solo paso")
     def create_chart_from_data_tool(file_path, sheet_name, data, chart_type, position=None, title=None, style=None):
-        """
-        Crea un gráfico a partir de datos nuevos en un solo paso.
-        
-        Args:
-            🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+        """Create a chart from new data in one step.
 
-            file_path (str): Ruta al archivo Excel
-            sheet_name (str): Nombre de la hoja
-            data (list): Array bidimensional con los datos para el gráfico
-            chart_type (str): Tipo de gráfico ('column', 'bar', 'line', 'pie', etc.)
-            position (str): Celda donde colocar el gráfico (ej. "E1")
-            title (str): Título del gráfico
-            style: Estilo del gráfico
-                
+        Args:
+            🔒 **Emojis must never be included in text written to cells, labels, titles or charts.**
+
+            file_path (str): Path to the Excel file.
+            sheet_name (str): Name of the sheet.
+            data (list): Two-dimensional array with the data for the chart.
+            chart_type (str): Chart type (``'column'``, ``'bar'``, ``'line'``, ``'pie'``, etc.).
+            position (str): Cell where the chart will be placed (e.g. ``"E1"``).
+            title (str): Chart title.
+            style: Chart style.
+
         Returns:
-            dict: Resultado de la operación
+            dict: Result of the operation.
         """
         try:
             # Verificar si el archivo existe, si no, crearlo
@@ -5097,14 +5076,13 @@ if HAS_MCP:
     
     @mcp.tool(description="Actualiza un informe existente con nuevos datos")
     def update_report_tool(file_path, data_updates, config_updates=None, recalculate=True):
-        """
-        Actualiza un informe existente con nuevos datos y configuraciones.
-        
-        Args:
-            🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+        """Update an existing report with new data and configuration changes.
 
-            file_path (str): Ruta al archivo Excel a actualizar
-            data_updates (dict): Diccionario con actualizaciones de datos:
+        Args:
+            🔒 **Emojis must never be included in text written to cells, labels, titles or charts.**
+
+            file_path (str): Path to the Excel file to update.
+            data_updates (dict): Dictionary with data updates:
                 {
                     "sheet_name": {
                         "range1": data_list1,
@@ -5112,12 +5090,12 @@ if HAS_MCP:
                         ...
                     }
                 }
-            config_updates (dict, opcional): Actualizaciones de configuración:
+            config_updates (dict, optional): Configuration updates:
                 {
                     "charts": [
                         {
                             "sheet": "sheet_name",
-                            "id": 0,  # o "title"
+                            "id": 0,  # or "title"
                             "title": "New Title",
                             "style": "new_style"
                         }
@@ -5126,14 +5104,14 @@ if HAS_MCP:
                         {
                             "sheet": "sheet_name",
                             "name": "TableName",
-                            "range": "A1:D20"  # Nuevo rango
+                            "range": "A1:D20"  # New range
                         }
                     ]
                 }
-            recalculate (bool): Si es True, recalcula todas las fórmulas
-                
+            recalculate (bool): If ``True`` recalculate all formulas.
+
         Returns:
-            dict: Resultado de la operación
+            dict: Result of the operation.
         """
         try:
             # Verificar que el archivo existe
@@ -5248,93 +5226,88 @@ if HAS_MCP:
     
     @mcp.tool(description="Crea un dashboard dinámico con múltiples visualizaciones en un solo paso")
     def create_dashboard_tool(file_path, data, dashboard_config, overwrite=False):
-        """
-        Crea un dashboard dinámico con múltiples visualizaciones en un solo paso.
-        
-        Args:
-            🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+        """Create a dynamic dashboard with multiple visualizations in one step.
 
-            file_path (str): Ruta al archivo Excel a crear
-            data (dict): Diccionario con datos por hoja (ver documentación para formato)
-            dashboard_config (dict): Configuración del dashboard (ver documentación para formato)
-            overwrite (bool): Si es True, sobrescribe el archivo si existe
-                
+        Args:
+            🔒 **Emojis must never be included in text written to cells, labels, titles or charts.**
+
+            file_path (str): Path to the Excel file to create.
+            data (dict): Dictionary with data per sheet (see docs for format).
+            dashboard_config (dict): Dashboard configuration (see docs for format).
+            overwrite (bool): If ``True`` overwrite the file if it exists.
+
         Returns:
-            dict: Resultado de la operación
+            dict: Result of the operation.
         """
         return create_dynamic_dashboard(file_path, data, dashboard_config, overwrite)
     
     @mcp.tool(description="Crea un informe basado en una plantilla Excel, sustituyendo datos y actualizando gráficos")
     def create_report_from_template_tool(template_file, output_file, data_mappings, chart_mappings=None, format_mappings=None):
-        """
-        Crea un informe basado en una plantilla Excel, sustituyendo datos y actualizando gráficos.
-        
-        Args:
-            🔒 **Nunca deben incluirse emojis en los textos escritos en celdas, etiquetas, títulos o gráficos de Excel.**
+        """Create a report from an Excel template, replacing data and updating charts.
 
-            template_file (str): Ruta a la plantilla Excel
-            output_file (str): Ruta donde guardar el informe generado
-            data_mappings (dict): Diccionario con mapeos de datos (ver documentación para formato)
-            chart_mappings (dict, opcional): Diccionario con actualizaciones de gráficos
-            format_mappings (dict, opcional): Diccionario con formatos a aplicar
-                
+        Args:
+            🔒 **Emojis must never be included in text written to cells, labels, titles or charts.**
+
+            template_file (str): Path to the Excel template.
+            output_file (str): Path where the generated report will be saved.
+            data_mappings (dict): Data mappings dictionary (see docs for format).
+            chart_mappings (dict, optional): Dictionary with chart updates.
+            format_mappings (dict, optional): Dictionary with formats to apply.
+
         Returns:
-            dict: Resultado de la operación
+            dict: Result of the operation.
         """
         return create_report_from_template(template_file, output_file, data_mappings, chart_mappings, format_mappings)
     
     @mcp.tool(description="Importa datos desde múltiples fuentes (CSV, JSON, SQL) a un archivo Excel")
     def import_data_tool(excel_file, import_config, sheet_name=None, start_cell="A1", create_tables=False):
-        """
-        Importa datos desde múltiples fuentes (CSV, JSON, SQL) a un archivo Excel.
-        
+        """Import data from multiple sources (CSV, JSON, SQL) into an Excel file.
+
         Args:
-            excel_file (str): Ruta al archivo Excel donde importar los datos
-            import_config (dict): Configuración de importación (ver documentación para formato)
-            sheet_name (str, opcional): Nombre de hoja predeterminado
-            start_cell (str, opcional): Celda inicial predeterminada
-            create_tables (bool, opcional): Si es True, crea tablas Excel
-                
+            excel_file (str): Path to the Excel file where the data will be imported.
+            import_config (dict): Import configuration (see documentation for format).
+            sheet_name (str, optional): Default sheet name.
+            start_cell (str, optional): Default starting cell.
+            create_tables (bool, optional): If ``True`` create Excel tables for each dataset.
+
         Returns:
-            dict: Resultado de la operación
+            dict: Result of the operation.
         """
         return import_multi_source_data(excel_file, import_config, sheet_name, start_cell, create_tables)
     
     @mcp.tool(description="Exporta datos de Excel a múltiples formatos (CSV, JSON, PDF)")
     def export_data_tool(excel_file, export_config):
-        """
-        Exporta datos de Excel a múltiples formatos (CSV, JSON, PDF).
-        
+        """Export Excel data to multiple formats (CSV, JSON, PDF).
+
         Args:
-            excel_file (str): Ruta al archivo Excel de origen
-            export_config (dict): Configuración de exportación (ver documentación para formato)
-                
+            excel_file (str): Path to the source Excel file.
+            export_config (dict): Export configuration (see documentation for format).
+
         Returns:
-            dict: Resultado de la operación
+            dict: Result of the operation.
         """
         return export_excel_data(excel_file, export_config)
     
     @mcp.tool(description="Filtra y extrae datos de una tabla o rango en formato de registros")
     def filter_data_tool(file_path, sheet_name, range_str=None, table_name=None, filters=None):
-        """
-        Filtra y extrae datos de una tabla o rango en formato de registros.
-        
+        """Filter and extract data from a table or range as records.
+
         Args:
-            file_path (str): Ruta al archivo Excel
-            sheet_name (str): Nombre de la hoja
-            range_str (str, opcional): Rango en formato A1:B5 (requerido si no se especifica table_name)
-            table_name (str, opcional): Nombre de la tabla (requerido si no se especifica range_str)
-            filters (dict, opcional): Filtros a aplicar a los datos:
+            file_path (str): Path to the Excel file.
+            sheet_name (str): Name of the sheet.
+            range_str (str, optional): Range in ``A1:B5`` format (required if ``table_name`` is not provided).
+            table_name (str, optional): Table name (required if ``range_str`` is not provided).
+            filters (dict, optional): Filters to apply to the data:
                 {
-                    "field1": value1,  # Igualdad simple
-                    "field2": [value1, value2],  # Lista de valores posibles
-                    "field3": {"gt": 100},  # Mayor que
-                    "field4": {"lt": 50},  # Menor que
-                    "field5": {"contains": "text"}  # Contiene texto
+                    "field1": value1,               # Simple equality
+                    "field2": [value1, value2],      # List of allowed values
+                    "field3": {"gt": 100},           # Greater than
+                    "field4": {"lt": 50},            # Less than
+                    "field5": {"contains": "text"}   # Contains text
                 }
-                
+
         Returns:
-            dict: Resultado de la operación con los datos filtrados
+            dict: Result of the operation with the filtered data.
         """
         try:
             # Validar argumentos
@@ -5378,17 +5351,16 @@ if HAS_MCP:
 
     @mcp.tool(description="Exporta un libro a PDF solo si tiene una única hoja visible")
     def export_single_sheet_pdf_tool(excel_file, output_pdf=None):
-        """Exporta un archivo Excel a PDF si solo tiene una hoja visible."""
+        """Export an Excel file to PDF only if it has a single visible sheet."""
         return export_single_visible_sheet_pdf(excel_file, output_pdf)
 
     @mcp.tool(description="Exporta una o varias hojas a PDF")
     def export_sheets_pdf_tool(excel_file, sheets=None, output_dir=None, single_file=False):
-        """Exporta las hojas indicadas de un libro Excel a PDF.
+        """Export the specified sheets of an Excel workbook to PDF.
 
-        ``sheets`` puede ser un nombre de hoja o una lista. Si es ``None`` se
-        exportará cada hoja existente de forma individual. Si ``single_file`` es
-        ``True`` y se especifican varias hojas, se intentará generar un único
-        PDF con todas ellas.
+        ``sheets`` may be a sheet name or a list of names. If ``None`` every existing
+        sheet is exported individually. If ``single_file`` is ``True`` and several
+        sheets are specified, the function attempts to create a single PDF with all of them.
         """
         return export_sheets_to_pdf(excel_file, sheets, output_dir, single_file)
 
